@@ -135,11 +135,12 @@ export function ReelsDownloader() {
 
   const handleDirectDownload = (downloadUrl: string, filename?: string) => {
     setIsDownloadMenuOpen(false);
+    const cleanFilename = filename || "video.mp4";
+    const proxyDownloadUrl = `/api/proxy-download?url=${encodeURIComponent(downloadUrl)}&filename=${encodeURIComponent(cleanFilename)}`;
+
     const a = document.createElement("a");
-    a.href = downloadUrl;
-    a.download = filename || "video.mp4";
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
+    a.href = proxyDownloadUrl;
+    a.download = cleanFilename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
