@@ -5,7 +5,7 @@ import { ShieldCheck, Lock, HardDrive, EyeOff, ServerOff, ChevronRight } from "l
 export const metadata = {
   title: "Privacy & Architecture Pledge",
   description:
-    "Learn about our zero-tracking, 100% in-browser processing architecture at Roky Tools.",
+    "Learn about our zero-tracking, 100% in-browser processing architecture at OmniTools.",
 };
 
 export default function PrivacyPage() {
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
           Your data never leaves your device.
         </h1>
         <p className="mt-3 text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          At Roky Tools, privacy is not an afterthought or marketing slogan—it is the foundational technical architecture of every tool we create.
+          At OmniTools, privacy is not an afterthought or marketing slogan—it is the foundational technical architecture of every tool we create.
         </p>
       </div>
 

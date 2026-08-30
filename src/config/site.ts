@@ -1,9 +1,9 @@
 export const siteConfig = {
-  name: "Roky Tools",
+  name: "OmniTools",
   domain: "tools.rokyuddin.com",
   url: "https://tools.rokyuddin.com",
   ogImage: "https://tools.rokyuddin.com/og.png",
-  description: "Simple, fast, free online tools for everyday problems. No signup required, privacy-friendly, 100% client-side processing.",
+  description: "Free, fast, and privacy-first online tools for everyday tasks. Zero server uploads, 100% in-browser processing, and no signup required.",
   creator: {
     name: "Md Rokyuddin",
     url: "https://rokyuddin.com",

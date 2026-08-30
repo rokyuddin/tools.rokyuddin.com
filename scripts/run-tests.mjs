@@ -49,7 +49,7 @@ import {
 } from "../src/features/utm-builder/utils/utm-generator.ts";
 import { validateUtmParams } from "../src/features/utm-builder/utils/utm-validator.ts";
 
-console.log("🚀 Running Roky Tools Unit Tests...\n");
+console.log("🚀 Running OmniTools Unit Tests...\n");
 
 let passed = 0;
 let total = 0;

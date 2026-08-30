@@ -9,13 +9,14 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Roky Tools – Free, Fast Online Tools for Everyday Problems",
-    template: "%s | Roky Tools",
+    default: "OmniTools – Free, Fast & Privacy-First Online Utilities",
+    template: "%s | OmniTools",
   },
   description:
-    "Collection of fast, free, privacy-friendly online utilities. Image compressor, WebP converter, WhatsApp link generator, BDT amount to words, and screenshot color extractor. No signup required.",
+    "Collection of fast, free, privacy-friendly online utilities. Image compressor, WebP converter, WhatsApp link generator, BDT amount to words, and screenshot color extractor. 100% private, client-side execution.",
   keywords: [
     "free online tools",
+    "omnitools",
     "image compressor",
     "image to webp",
     "whatsapp link generator",
@@ -25,23 +26,32 @@ export const metadata: Metadata = {
     "social media resizer",
     "no signup tools",
     "private tools",
+    "developer utilities",
   ],
   authors: [{ name: siteConfig.creator.name, url: siteConfig.creator.url }],
   creator: siteConfig.creator.name,
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteConfig.url,
-    title: "Roky Tools – Free, Fast Online Tools for Everyday Problems",
+    title: "OmniTools – Free, Fast & Privacy-First Online Utilities",
     description:
-      "Simple tools for small everyday problems. Free. Fast. No signup. 100% in-browser private execution.",
+      "Simple tools for everyday problems. Free, fast, zero signup, and 100% in-browser private execution.",
     siteName: siteConfig.name,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Roky Tools – Free, Fast Online Tools for Everyday Problems",
+    title: "OmniTools – Free, Fast & Privacy-First Online Utilities",
     description:
-      "Simple tools for small everyday problems. Free. Fast. No signup. 100% in-browser private execution.",
+      "Simple tools for everyday problems. Free, fast, zero signup, and 100% in-browser private execution.",
     creator: "@mdrokyuddin",
   },
   robots: {

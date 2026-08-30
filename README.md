@@ -1,8 +1,8 @@
-# ROKY TOOLS — [tools.rokyuddin.com](https://tools.rokyuddin.com)
+# OmniTools — [tools.rokyuddin.com](https://tools.rokyuddin.com)
 
-> **Simple tools for small everyday problems. Free. Fast. No signup.**
+> **Simple, fast, and privacy-first online tools for everyday tasks. Zero signup required.**
 
-**Roky Tools** is a curated collection of fast, lightweight, and privacy-friendly online utilities. Every tool solves one specific problem extremely well with **100% in-browser execution**, zero mandatory accounts, and no intrusive subscriptions.
+**OmniTools** is a curated collection of fast, lightweight, and privacy-friendly online utilities. Every tool solves one specific problem extremely well with **100% in-browser execution**, zero mandatory accounts, and no intrusive subscriptions.
 
 ---
 
@@ -21,7 +21,7 @@
 
 ## 🔒 Privacy Architecture
 
-At Roky Tools, privacy is built directly into the technical architecture:
+At OmniTools, privacy is built directly into the technical architecture:
 
 * **100% In-Browser Execution**: All image compression, WebP conversions, palette extractions, and calculations happen on your device via HTML5 Canvas and Web APIs.
 * **Zero Server Uploads**: Your images, text, and data never leave your browser and are never uploaded to any remote server or database.
@@ -128,7 +128,7 @@ pnpm start
 
 ## ☕ Support the Project
 
-Roky Tools is completely free to use without paywalls or ads. If these tools saved you time, you can support ongoing development on SupportKori:
+OmniTools is completely free to use without paywalls or ads. If these tools saved you time, you can support ongoing development on SupportKori:
 
 👉 **[Support on SupportKori](https://www.supportkori.com/mdrokyuddin)**
 

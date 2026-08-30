@@ -1,0 +1,36 @@
+<svg width="240" height="64" viewBox="0 0 240 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="omni-bg-full" x1="6" y1="6" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#3B82F6" />
+      <stop offset="50%" stopColor="#6366F1" />
+      <stop offset="100%" stopColor="#8B5CF6" />
+    </linearGradient>
+    <linearGradient id="omni-accent-full" x1="16" y1="12" x2="48" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#38BDF8" />
+      <stop offset="100%" stopColor="#818CF8" />
+    </linearGradient>
+    <linearGradient id="omni-bevel-full" x1="30" y1="6" x2="30" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.35" />
+      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect x="6" y="8" width="48" height="48" rx="14" fill="url(#omni-bg-full)" />
+  <rect x="6.5" y="8.5" width="47" height="47" rx="13.5" stroke="url(#omni-bevel-full)" stroke-width="1" fill="none" />
+
+  <!-- Outer Isometric Hex Prism -->
+  <path d="M18 25L30 18L42 25V39L30 46L18 39V25Z" stroke="white" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" fill="url(#omni-accent-full)" fill-opacity="0.25" />
+
+  <!-- Inner Axes -->
+  <path d="M30 18V46" stroke="white" stroke-width="2" stroke-linecap="round" stroke-opacity="0.85" />
+  <path d="M18 32H42" stroke="white" stroke-width="2" stroke-linecap="round" stroke-opacity="0.85" />
+
+  <!-- Dynamic Core Node -->
+  <circle cx="30" cy="32" r="4" fill="white" />
+  <circle cx="30" cy="32" r="2" fill="#4F46E5" />
+
+  <!-- Wordmark Text -->
+  <text x="66" y="36" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="800" fill="#0F172A" letter-spacing="-0.5">OmniTools</text>
+  <text x="66" y="49" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="10" font-weight="500" fill="#64748B" letter-spacing="0.5">tools.rokyuddin.com</text>
+</svg>

@@ -1,8 +1,9 @@
 import React from "react";
 import Link from "next/link";
-import { Wrench, ShieldCheck, Heart, Coffee, ExternalLink } from "lucide-react";
+import { ShieldCheck, Heart, Coffee, ExternalLink } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { toolsRegistry } from "@/config/tools";
+import { Logo } from "./Logo";
 
 export function Footer() {
   const categories = ["Images", "Business", "Bangladesh"] as const;
@@ -13,15 +14,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand Col */}
           <div className="md:col-span-1 space-y-4">
-            <Link
-              href="/"
-              className="flex items-center gap-2 font-heading text-lg font-bold text-foreground"
-            >
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Wrench className="size-4" />
-              </div>
-              <span>ROKY TOOLS</span>
-            </Link>
+            <Logo size="sm" showDomain={false} />
 
             <p className="text-xs text-muted-foreground leading-relaxed">
               Simple, fast, free online tools for everyday problems. 100% privacy-friendly, zero server uploads, and no sign-up required.
@@ -88,7 +81,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Roky Tools — tools.rokyuddin.com. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} OmniTools — tools.rokyuddin.com. All rights reserved.</p>
           <p className="flex items-center gap-1">
             <span>Built with care by</span>
             <a

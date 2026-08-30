@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Wrench,
   Search,
   Menu,
   X,
   ShieldCheck,
 } from "lucide-react";
+import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
 import { SearchDialog } from "./SearchDialog";
 import { toolsRegistry } from "@/config/tools";
@@ -38,20 +38,7 @@ export function Header() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo & Brand */}
           <div className="flex items-center gap-6">
-            <Link
-              href="/"
-              className="flex items-center gap-2.5 font-heading text-lg font-bold tracking-tight text-foreground transition-colors hover:text-primary"
-            >
-              <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
-                <Wrench className="size-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="leading-tight">ROKY TOOLS</span>
-                <span className="text-[10px] font-mono text-muted-foreground font-normal tracking-wide">
-                  tools.rokyuddin.com
-                </span>
-              </div>
-            </Link>
+            <Logo size="md" />
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
