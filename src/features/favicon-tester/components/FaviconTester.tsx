@@ -8,8 +8,6 @@ import {
   Check,
   Code2,
   Trash2,
-  Sliders,
-  Layers,
 } from "lucide-react";
 import { UploadDropzone } from "@/components/upload/UploadDropzone";
 import { SizeGridPreview } from "./SizeGridPreview";
@@ -19,7 +17,7 @@ import { analyzeIconDimensions, generateHtmlFaviconSnippet, type IconAnalysis } 
 import { exportFaviconZipBundle } from "../utils/icon-exporter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { copyToClipboard } from "@/lib/utils";
 
 export function FaviconTester() {
@@ -80,44 +78,53 @@ export function FaviconTester() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {!imageSrc ? (
         <div>
           <UploadDropzone
             onFilesSelected={handleFilesSelected}
             accept="image/*,.png,.svg,.jpg,.jpeg,.webp,.ico"
-            title="Upload your favicon or app icon"
-            subtitle="Supports PNG, SVG, JPG, WebP, and ICO. SVG or 512×512+ recommended."
+            title="Upload favicon or app icon"
+            subtitle="Drop SVG or PNG to test on browser tabs and device mockups"
           />
 
-          {/* Quick Demo Button */}
-          <div className="mt-4 text-center">
+          <div className="mt-3 text-center">
             <button
               type="button"
               onClick={() => {
-                // Generate a simple high-res geometric icon via data URI
                 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                  <rect width="512" height="512" rx="128" fill="#2563EB"/>
-                  <path d="M156 366V146h68c34 0 58 8 72 23 15 15 22 35 22 61 0 17-4 32-13 44-8 12-21 21-37 26l57 66h-50l-48-58h-31v58h-40zm40-94h27c19 0 32-4 39-11 8-8 12-19 12-33 0-14-4-24-12-31s-21-10-39-10h-27v85z" fill="#FFFFFF"/>
+                  <defs>
+                    <linearGradient id="omni-grad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#3B82F6"/>
+                      <stop offset="50%" stopColor="#6366F1"/>
+                      <stop offset="100%" stopColor="#8B5CF6"/>
+                    </linearGradient>
+                  </defs>
+                  <rect width="512" height="512" rx="128" fill="url(#omni-grad)"/>
+                  <path d="M144 192L256 128L368 192V320L256 384L144 320V192Z" stroke="#FFFFFF" stroke-width="24" stroke-linejoin="round" fill="#38BDF8" fill-opacity="0.25"/>
+                  <path d="M256 128V384" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round"/>
+                  <path d="M144 256H368" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round"/>
+                  <circle cx="256" cy="256" r="32" fill="#FFFFFF"/>
                 </svg>`;
                 const url = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
                 setImageSrc(url);
                 setDimensions({ width: 512, height: 512 });
-                setSiteName("Roky Tools");
+                setSiteName("OmniTools");
               }}
               className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium cursor-pointer"
             >
               <Sparkles className="size-3.5" />
-              Try with a sample brand logo icon (SVG / 512px)
+              Try sample logo icon
             </button>
           </div>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Top Control Bar */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-xs">
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <div className="relative size-14 rounded-xl border border-border bg-muted/60 p-2 shrink-0 shadow-inner flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageSrc}
                   alt="Uploaded icon"
@@ -128,23 +135,25 @@ export function FaviconTester() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-heading text-base font-bold text-foreground">
-                    Icon Test Lab
+                    Favicon Preview
                   </h3>
                   <span className="font-mono text-xs text-muted-foreground">
                     {dimensions?.width} × {dimensions?.height} px
                   </span>
                 </div>
                 <div className="mt-1 flex items-center gap-2">
-                  <Label htmlFor="site-title" className="text-xs text-muted-foreground font-medium shrink-0">
-                    Preview Title:
-                  </Label>
-                  <Input
-                    id="site-title"
-                    value={siteName}
-                    onChange={(e) => setSiteName(e.target.value)}
-                    placeholder="My Website"
-                    className="h-7 text-xs max-w-[180px]"
-                  />
+                  <Field orientation="horizontal" className="gap-2">
+                    <FieldLabel htmlFor="site-title" className="text-xs text-muted-foreground font-medium shrink-0">
+                      Title:
+                    </FieldLabel>
+                    <Input
+                      id="site-title"
+                      value={siteName}
+                      onChange={(e) => setSiteName(e.target.value)}
+                      placeholder="My Website"
+                      className="h-8 text-xs max-w-[180px]"
+                    />
+                  </Field>
                 </div>
               </div>
             </div>
@@ -186,17 +195,17 @@ export function FaviconTester() {
                 size="sm"
                 onClick={handleExportZip}
                 disabled={isExporting}
-                className="gap-1.5 text-xs cursor-pointer"
+                className="gap-1.5 text-xs cursor-pointer h-8"
               >
                 <Download className="size-3.5" />
-                {isExporting ? "Generating..." : "Download Favicon ZIP"}
+                {isExporting ? "Exporting..." : "Download ZIP"}
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleReset}
-                className="gap-1.5 text-xs text-destructive hover:bg-destructive/10 cursor-pointer"
+                className="gap-1.5 text-xs text-destructive hover:bg-destructive/10 cursor-pointer h-8"
               >
                 <Trash2 className="size-3.5" />
               </Button>
@@ -208,36 +217,36 @@ export function FaviconTester() {
             <button
               type="button"
               onClick={() => setActiveTab("mockups")}
-              className={`pb-3 px-4 transition-colors cursor-pointer border-b-2 font-semibold ${
+              className={`pb-2.5 px-4 transition-colors cursor-pointer border-b-2 font-semibold ${
                 activeTab === "mockups"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              Realistic Mockups
+              Mockups
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("sizes")}
-              className={`pb-3 px-4 transition-colors cursor-pointer border-b-2 font-semibold ${
+              className={`pb-2.5 px-4 transition-colors cursor-pointer border-b-2 font-semibold ${
                 activeTab === "sizes"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              Pixel Size Grid (16px – 512px)
+              Size Grid
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("code")}
-              className={`pb-3 px-4 transition-colors cursor-pointer border-b-2 font-semibold flex items-center gap-1.5 ${
+              className={`pb-2.5 px-4 transition-colors cursor-pointer border-b-2 font-semibold flex items-center gap-1.5 ${
                 activeTab === "code"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <Code2 className="size-3.5" />
-              HTML &amp; Manifest Code
+              HTML Tags
             </button>
           </div>
 
@@ -251,33 +260,28 @@ export function FaviconTester() {
           )}
 
           {activeTab === "code" && (
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
-              <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-                <div>
-                  <h3 className="font-heading text-base font-bold text-foreground">
-                    Favicon HTML &amp; Web Manifest Setup
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Copy and paste these tags into your website&apos;s <code className="text-foreground font-mono">&lt;head&gt;</code> section.
-                  </p>
-                </div>
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+              <div className="flex items-center justify-between border-b border-border pb-3 mb-3">
+                <h3 className="font-heading text-sm font-bold text-foreground">
+                  HTML Tags
+                </h3>
                 <Button
                   size="sm"
                   onClick={handleCopyCode}
-                  className="gap-1.5 text-xs cursor-pointer"
+                  className="gap-1.5 text-xs cursor-pointer h-8"
                 >
                   {copiedCode ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                  {copiedCode ? "Copied!" : "Copy Snippet"}
+                  {copiedCode ? "Copied!" : "Copy"}
                 </Button>
               </div>
 
-              <pre className="overflow-x-auto rounded-xl bg-muted/60 p-4 font-mono text-xs text-foreground leading-relaxed">
+              <pre className="overflow-x-auto rounded-xl bg-muted/60 p-3.5 font-mono text-xs text-foreground leading-relaxed">
                 {htmlSnippet}
               </pre>
             </div>
           )}
 
-          {/* Smart Legibility & Aspect Ratio Warnings */}
+          {/* Smart Warnings */}
           {analysis && <LegibilityWarnings analysis={analysis} />}
         </div>
       )}

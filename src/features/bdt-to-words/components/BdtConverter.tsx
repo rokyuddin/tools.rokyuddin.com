@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState, useId } from "react";
-import { Coins, RotateCcw, ArrowRightLeft } from "lucide-react";
+import { Coins, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  FieldGroup,
+  Field,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CopyButton } from "@/components/common/CopyButton";
 import {
@@ -18,9 +22,9 @@ const presets = [
   { label: "1,000", value: "1000" },
   { label: "10,000", value: "10000" },
   { label: "50,000", value: "50000" },
-  { label: "1 Lakh (1,00,000)", value: "100000" },
-  { label: "10 Lakh (10,00,000)", value: "1000000" },
-  { label: "1 Crore (1,00,00,000)", value: "10000000" },
+  { label: "1 Lakh", value: "100000" },
+  { label: "10 Lakh", value: "1000000" },
+  { label: "1 Crore", value: "10000000" },
 ];
 
 export function BdtConverter() {
@@ -51,14 +55,14 @@ export function BdtConverter() {
   const breakdown = parsed.isValid ? getNumberBreakdown(parsed.taka) : null;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-12 items-start">
+    <div className="grid gap-6 lg:grid-cols-12 items-start">
       {/* Input Section */}
-      <Card className="lg:col-span-6 shadow-sm border-border">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl flex items-center justify-between">
+      <Card className="lg:col-span-6 shadow-xs border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Coins className="size-5 text-primary" />
-              Enter BDT Amount
+              <Coins className="size-4 text-primary" />
+              BDT Amount
             </span>
             {inputValue && (
               <Button
@@ -74,143 +78,131 @@ export function BdtConverter() {
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor={amountInputId}>Amount (in Taka / BDT ৳)</Label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-base">
-                ৳
-              </span>
-              <Input
-                id={amountInputId}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="e.g. 125500 or 125500.50 or ১২৫৫০০"
-                className="h-12 pl-8 text-lg font-mono tracking-wide"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Supports standard digits (125500), Bengali numerals (১২৫৫০০), and decimals/paisa (.50).
-            </p>
-          </div>
+        <CardContent>
+          <FieldGroup className="gap-5">
+            <Field>
+              <FieldLabel htmlFor={amountInputId}>Amount (Taka ৳)</FieldLabel>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-lg">
+                  ৳
+                </span>
+                <Input
+                  id={amountInputId}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="e.g. 125500 or ১২৫৫০০"
+                  className="h-14 pl-9 text-xl font-mono tracking-wide font-medium"
+                />
+              </div>
+            </Field>
 
-          {/* Preset Buttons */}
-          <div>
-            <span className="text-xs font-semibold text-muted-foreground block mb-2">
-              Quick Presets:
-            </span>
+            {/* Preset Buttons */}
             <div className="flex flex-wrap gap-1.5">
               {presets.map((p) => (
                 <button
                   key={p.label}
                   type="button"
                   onClick={() => setInputValue(p.value)}
-                  className="text-xs px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer border border-border/50 font-medium"
+                  className="text-xs px-2.5 py-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer border border-border/50 font-medium"
                 >
                   {p.label}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Formatting options */}
-          <div className="pt-2 border-t border-border/60">
-            <span className="text-xs font-semibold text-muted-foreground block mb-2">
-              English Letter Case:
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCaseFormat("sentence")}
-                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
-                  caseFormat === "sentence"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted text-muted-foreground border-border hover:text-foreground"
-                }`}
-              >
-                Sentence case
-              </button>
-              <button
-                type="button"
-                onClick={() => setCaseFormat("title")}
-                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
-                  caseFormat === "title"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted text-muted-foreground border-border hover:text-foreground"
-                }`}
-              >
-                Title Case
-              </button>
-              <button
-                type="button"
-                onClick={() => setCaseFormat("upper")}
-                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
-                  caseFormat === "upper"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted text-muted-foreground border-border hover:text-foreground"
-                }`}
-              >
-                UPPERCASE
-              </button>
-            </div>
-          </div>
-
-          {/* Number Breakdown */}
-          {breakdown && parsed.taka > 0 && (
-            <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 text-xs space-y-1.5">
-              <span className="font-semibold text-foreground block">
-                Number Breakdown (South Asian System):
-              </span>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center pt-1 font-mono">
-                {breakdown.crore > 0 && (
-                  <div className="p-1.5 bg-background rounded border border-border">
-                    <span className="text-muted-foreground block text-[10px]">Crores</span>
-                    <span className="font-bold text-primary">{breakdown.crore}</span>
-                  </div>
-                )}
-                {breakdown.lakh > 0 && (
-                  <div className="p-1.5 bg-background rounded border border-border">
-                    <span className="text-muted-foreground block text-[10px]">Lakhs</span>
-                    <span className="font-bold text-primary">{breakdown.lakh}</span>
-                  </div>
-                )}
-                {breakdown.thousand > 0 && (
-                  <div className="p-1.5 bg-background rounded border border-border">
-                    <span className="text-muted-foreground block text-[10px]">Thousands</span>
-                    <span className="font-bold text-primary">{breakdown.thousand}</span>
-                  </div>
-                )}
-                {breakdown.hundred > 0 && (
-                  <div className="p-1.5 bg-background rounded border border-border">
-                    <span className="text-muted-foreground block text-[10px]">Hundreds</span>
-                    <span className="font-bold text-primary">{breakdown.hundred}</span>
-                  </div>
-                )}
-                {breakdown.units > 0 && (
-                  <div className="p-1.5 bg-background rounded border border-border">
-                    <span className="text-muted-foreground block text-[10px]">Units</span>
-                    <span className="font-bold text-primary">{breakdown.units}</span>
-                  </div>
-                )}
+            {/* Formatting options */}
+            <div className="pt-2 border-t border-border/60">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCaseFormat("sentence")}
+                  className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
+                    caseFormat === "sentence"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  Sentence case
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCaseFormat("title")}
+                  className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
+                    caseFormat === "title"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  Title Case
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCaseFormat("upper")}
+                  className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
+                    caseFormat === "upper"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  UPPERCASE
+                </button>
               </div>
             </div>
-          )}
+
+            {/* Number Breakdown */}
+            {breakdown && parsed.taka > 0 && (
+              <div className="p-3 rounded-xl bg-muted/40 border border-border/60 text-xs">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center font-mono">
+                  {breakdown.crore > 0 && (
+                    <div className="p-1.5 bg-background rounded-lg border border-border">
+                      <span className="text-muted-foreground block text-[10px]">Crores</span>
+                      <span className="font-bold text-primary">{breakdown.crore}</span>
+                    </div>
+                  )}
+                  {breakdown.lakh > 0 && (
+                    <div className="p-1.5 bg-background rounded-lg border border-border">
+                      <span className="text-muted-foreground block text-[10px]">Lakhs</span>
+                      <span className="font-bold text-primary">{breakdown.lakh}</span>
+                    </div>
+                  )}
+                  {breakdown.thousand > 0 && (
+                    <div className="p-1.5 bg-background rounded-lg border border-border">
+                      <span className="text-muted-foreground block text-[10px]">Thousands</span>
+                      <span className="font-bold text-primary">{breakdown.thousand}</span>
+                    </div>
+                  )}
+                  {breakdown.hundred > 0 && (
+                    <div className="p-1.5 bg-background rounded-lg border border-border">
+                      <span className="text-muted-foreground block text-[10px]">Hundreds</span>
+                      <span className="font-bold text-primary">{breakdown.hundred}</span>
+                    </div>
+                  )}
+                  {breakdown.units > 0 && (
+                    <div className="p-1.5 bg-background rounded-lg border border-border">
+                      <span className="text-muted-foreground block text-[10px]">Units</span>
+                      <span className="font-bold text-primary">{breakdown.units}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </FieldGroup>
         </CardContent>
       </Card>
 
       {/* Output Results Section */}
-      <div className="lg:col-span-6 space-y-6">
+      <div className="lg:col-span-6 space-y-4">
         {/* English Words Card */}
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <span>English Written Amount</span>
+        <Card className="border-border shadow-xs">
+          <CardHeader className="pb-2.5 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-semibold text-foreground">
+              English
             </CardTitle>
             {englishWords && (
               <CopyButton
                 textToCopy={englishWords}
-                label="Copy English"
+                label="Copy"
                 size="sm"
               />
             )}
@@ -221,23 +213,23 @@ export function BdtConverter() {
                 {englishWords}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                Enter a valid numeric amount to see the English conversion.
+              <p className="text-xs text-muted-foreground py-4 text-center">
+                Enter an amount to see English words
               </p>
             )}
           </CardContent>
         </Card>
 
         {/* Bangla Words Card */}
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <span>বাংলায় লিখিত পরিমাণ</span>
+        <Card className="border-border shadow-xs">
+          <CardHeader className="pb-2.5 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-semibold text-foreground">
+              বাংলা
             </CardTitle>
             {banglaWords && (
               <CopyButton
                 textToCopy={banglaWords}
-                label="Copy বাংলা"
+                label="Copy"
                 size="sm"
               />
             )}
@@ -248,20 +240,12 @@ export function BdtConverter() {
                 {banglaWords}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                সঠিক সংখ্যা লিখলে এখানে বাংলায় রূপান্তরিত বাক্য প্রদর্শিত হবে।
+              <p className="text-xs text-muted-foreground py-4 text-center">
+                সংখ্যা লিখলে এখানে বাংলায় প্রদর্শিত হবে
               </p>
             )}
           </CardContent>
         </Card>
-
-        {/* Cheque Copy Hint */}
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-          <ArrowRightLeft className="size-4 shrink-0" />
-          <span>
-            Both English and Bangla formats include formal &quot;only&quot; and &quot;মাত্র&quot; suffixes compliant with Bangladesh banking cheques and tax invoices.
-          </span>
-        </div>
       </div>
     </div>
   );

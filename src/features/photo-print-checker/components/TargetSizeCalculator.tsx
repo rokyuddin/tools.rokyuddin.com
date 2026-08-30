@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { HelpCircle, Sparkles, CheckCircle2, AlertTriangle, XCircle, ArrowRight } from "lucide-react";
+import { CheckCircle2, AlertTriangle, XCircle, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  FieldGroup,
+  Field,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   evaluatePrintSize,
   getQualityAssessment,
@@ -40,20 +43,11 @@ export function TargetSizeCalculator({
   }, [imageWidth, imageHeight, wInches, hInches]);
 
   return (
-    <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 via-card to-card p-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary mb-1">
-            <Sparkles className="size-3.5" />
-            Killer Feature
-          </div>
-          <h3 className="font-heading text-xl font-bold text-foreground">
-            &ldquo;Can I print this?&rdquo; Target Size Checker
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Enter the exact physical dimensions of your picture frame or canvas.
-          </p>
-        </div>
+    <div className="rounded-2xl border border-primary/30 bg-card p-5 sm:p-6 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
+        <h3 className="font-heading text-lg font-bold text-foreground">
+          Custom Frame Size Checker
+        </h3>
 
         {/* Unit Selector */}
         <div className="flex rounded-lg border border-border bg-muted p-0.5 text-xs self-start sm:self-auto">
@@ -79,45 +73,47 @@ export function TargetSizeCalculator({
       </div>
 
       {/* Input row */}
-      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="target-w" className="text-xs font-semibold">
-            Width ({unit === "in" ? "inches" : "cm"})
-          </Label>
-          <Input
-            id="target-w"
-            type="number"
-            min="1"
-            max="200"
-            step="0.5"
-            value={targetWidth}
-            onChange={(e) => setTargetWidth(e.target.value)}
-            className="mt-1.5"
-            placeholder="e.g. 8"
-          />
-        </div>
+      <FieldGroup className="mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field>
+            <FieldLabel htmlFor="target-w">
+              Width ({unit === "in" ? "inches" : "cm"})
+            </FieldLabel>
+            <Input
+              id="target-w"
+              type="number"
+              min="1"
+              max="200"
+              step="0.5"
+              value={targetWidth}
+              onChange={(e) => setTargetWidth(e.target.value)}
+              className="h-11 text-base"
+              placeholder="e.g. 8"
+            />
+          </Field>
 
-        <div>
-          <Label htmlFor="target-h" className="text-xs font-semibold">
-            Height ({unit === "in" ? "inches" : "cm"})
-          </Label>
-          <Input
-            id="target-h"
-            type="number"
-            min="1"
-            max="200"
-            step="0.5"
-            value={targetHeight}
-            onChange={(e) => setTargetHeight(e.target.value)}
-            className="mt-1.5"
-            placeholder="e.g. 10"
-          />
+          <Field>
+            <FieldLabel htmlFor="target-h">
+              Height ({unit === "in" ? "inches" : "cm"})
+            </FieldLabel>
+            <Input
+              id="target-h"
+              type="number"
+              min="1"
+              max="200"
+              step="0.5"
+              value={targetHeight}
+              onChange={(e) => setTargetHeight(e.target.value)}
+              className="h-11 text-base"
+              placeholder="e.g. 10"
+            />
+          </Field>
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Quick Preset Buttons */}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-        <span className="text-muted-foreground font-medium mr-1">Popular:</span>
+        <span className="text-muted-foreground font-medium mr-1">Presets:</span>
         {[
           { label: "4 × 6 in", w: "4", h: "6", u: "in" },
           { label: "5 × 7 in", w: "5", h: "7", u: "in" },
@@ -134,7 +130,7 @@ export function TargetSizeCalculator({
               setTargetWidth(preset.w);
               setTargetHeight(preset.h);
             }}
-            className="rounded-md border border-border/80 bg-muted/70 px-2 py-0.5 text-xs font-medium text-foreground hover:bg-muted transition-colors cursor-pointer"
+            className="rounded-md border border-border/80 bg-muted/70 px-2 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors cursor-pointer"
           >
             {preset.label}
           </button>
@@ -143,33 +139,33 @@ export function TargetSizeCalculator({
 
       {/* Result Verdict Box */}
       {evaluation && (
-        <div className="mt-6 rounded-xl border border-border bg-card p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">
+        <div className="mt-5 rounded-xl border border-border bg-muted/20 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               {evaluation.quality.tier === "excellent" || evaluation.quality.tier === "very-good" ? (
-                <div className="flex size-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                  <CheckCircle2 className="size-6" />
+                <div className="flex size-9 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <CheckCircle2 className="size-5" />
                 </div>
               ) : evaluation.quality.tier === "good" || evaluation.quality.tier === "fair" ? (
-                <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
-                  <AlertTriangle className="size-6" />
+                <div className="flex size-9 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+                  <AlertTriangle className="size-5" />
                 </div>
               ) : (
-                <div className="flex size-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
-                  <XCircle className="size-6" />
+                <div className="flex size-9 items-center justify-center rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
+                  <XCircle className="size-5" />
                 </div>
               )}
 
               <div>
-                <h4 className="font-heading text-lg font-bold text-foreground">
+                <h4 className="font-heading text-base font-bold text-foreground">
                   {evaluation.effectiveDpi >= 240
-                    ? `Yes! Crisp and sharp at ${wNum} × ${hNum} ${unit}`
+                    ? `Crisp print at ${wNum} × ${hNum} ${unit}`
                     : evaluation.effectiveDpi >= 150
-                      ? `Yes, with good poster quality at ${wNum} × ${hNum} ${unit}`
-                      : `Warning: Image may look blurry or pixelated at ${wNum} × ${hNum} ${unit}`}
+                      ? `Good quality at ${wNum} × ${hNum} ${unit}`
+                      : `Low resolution at ${wNum} × ${hNum} ${unit}`}
                 </h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Calculated Output: <strong className="text-foreground">{evaluation.effectiveDpi} DPI</strong> — {evaluation.quality.description}
+                <p className="text-xs text-muted-foreground">
+                  Output: <strong className="text-foreground">{evaluation.effectiveDpi} DPI</strong> ({evaluation.quality.label})
                 </p>
               </div>
             </div>
@@ -178,37 +174,11 @@ export function TargetSizeCalculator({
               size="sm"
               variant="outline"
               onClick={() => onOpenCrop(wInches, hInches, `${wNum} × ${hNum} ${unit}`)}
-              className="gap-1.5 text-xs self-start sm:self-auto cursor-pointer"
+              className="gap-1.5 text-xs self-start sm:self-auto cursor-pointer h-9"
             >
-              Crop & Frame Preview
+              Crop &amp; Preview
               <ArrowRight className="size-3.5" />
             </Button>
-          </div>
-
-          {/* Technical breakdown */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div className="rounded-lg bg-muted/50 p-3">
-              <span className="text-muted-foreground font-medium">Original Resolution</span>
-              <p className="font-mono font-bold text-foreground mt-1">
-                {imageWidth} × {imageHeight} px
-              </p>
-            </div>
-
-            <div className="rounded-lg bg-muted/50 p-3">
-              <span className="text-muted-foreground font-medium">Recommended for 300 DPI</span>
-              <p className="font-mono font-bold text-foreground mt-1">
-                {evaluation.minPixelsFor300Dpi.width} × {evaluation.minPixelsFor300Dpi.height} px
-              </p>
-            </div>
-
-            <div className="rounded-lg bg-muted/50 p-3">
-              <span className="text-muted-foreground font-medium">Aspect Ratio & Cropping</span>
-              <p className="font-medium text-foreground mt-1">
-                {evaluation.aspectRatioMismatch
-                  ? `Mismatch (~${evaluation.cropPercent}% trimmed)`
-                  : "Exact match (No trim)"}
-              </p>
-            </div>
           </div>
         </div>
       )}

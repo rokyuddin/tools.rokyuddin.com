@@ -8,12 +8,10 @@ import {
   Download,
   Trash2,
   Sliders,
-  CheckCircle2,
   Mail,
   Phone,
   User,
   FileText,
-  RotateCcw,
 } from "lucide-react";
 import {
   cleanText,
@@ -49,13 +47,13 @@ export function TextCleaner() {
       return {
         cleanedOutput: cleanedText,
         statsComponent: (
-          <div className="rounded-xl border border-border bg-card p-4 text-xs">
+          <div className="rounded-xl border border-border bg-card p-3.5 text-xs">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-foreground">
-                Email Extraction &amp; Deduplication
+              <span className="font-semibold text-foreground">
+                Email Extractor &amp; Deduplication
               </span>
               <span className="font-mono font-bold text-primary">
-                {count} unique emails ({duplicates} duplicates removed)
+                {count} unique ({duplicates} duplicates removed)
               </span>
             </div>
           </div>
@@ -68,13 +66,13 @@ export function TextCleaner() {
       return {
         cleanedOutput: cleanedText,
         statsComponent: (
-          <div className="rounded-xl border border-border bg-card p-4 text-xs">
+          <div className="rounded-xl border border-border bg-card p-3.5 text-xs">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-foreground">
-                Phone Number Normalization
+              <span className="font-semibold text-foreground">
+                Phone Normalizer
               </span>
               <span className="font-mono font-bold text-primary">
-                {count} cleaned numbers ({duplicates} duplicates removed)
+                {count} cleaned ({duplicates} duplicates removed)
               </span>
             </div>
           </div>
@@ -87,13 +85,13 @@ export function TextCleaner() {
       return {
         cleanedOutput: cleanedText,
         statsComponent: (
-          <div className="rounded-xl border border-border bg-card p-4 text-xs">
+          <div className="rounded-xl border border-border bg-card p-3.5 text-xs">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-foreground">
-                Title Case Name Formatter
+              <span className="font-semibold text-foreground">
+                Name Formatter
               </span>
               <span className="font-mono font-bold text-primary">
-                {count} formatted names ({duplicates} duplicates removed)
+                {count} formatted ({duplicates} duplicates removed)
               </span>
             </div>
           </div>
@@ -146,17 +144,17 @@ export function TextCleaner() {
       );
     } else {
       setInputText(
-        `  Here is some   messy copied text   from an email or PDF document.\n\n\nIt contains “smart curly quotes”, ‘apostrophes’, and em—dashes.\n\n\nAlso has duplicate blank lines and trailing spaces.   \nAlso has duplicate blank lines and trailing spaces.   \n`
+        `  Here is some   messy text   from an email or PDF document.\n\n\nIt contains “smart curly quotes”, ‘apostrophes’, and em—dashes.\n\n\nAlso has duplicate blank lines and trailing spaces.   \nAlso has duplicate blank lines and trailing spaces.   \n`
       );
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Bar: Mode Selector & "Clean Everything" Hero Button */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-xs">
+    <div className="space-y-5">
+      {/* Top Bar: Mode Selector & Hero Buttons */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-xs">
         {/* Mode switcher tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="flex flex-wrap items-center gap-1 text-xs">
           <button
             type="button"
             onClick={() => setMode("general")}
@@ -167,7 +165,7 @@ export function TextCleaner() {
             }`}
           >
             <FileText className="size-3.5" />
-            General Text
+            General
           </button>
           <button
             type="button"
@@ -179,7 +177,7 @@ export function TextCleaner() {
             }`}
           >
             <Mail className="size-3.5" />
-            Email List
+            Emails
           </button>
           <button
             type="button"
@@ -191,7 +189,7 @@ export function TextCleaner() {
             }`}
           >
             <Phone className="size-3.5" />
-            Phone List
+            Phones
           </button>
           <button
             type="button"
@@ -208,44 +206,44 @@ export function TextCleaner() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 pt-3 lg:pt-0 border-border">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-border">
           <Button
             size="sm"
             onClick={handleCleanEverything}
-            className="gap-1.5 text-xs font-bold shadow-xs cursor-pointer"
+            className="gap-1.5 text-xs font-bold shadow-xs cursor-pointer h-9"
           >
             <Sparkles className="size-3.5" />
-            Clean Everything
+            Clean All
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowOptions(!showOptions)}
-            className="gap-1.5 text-xs cursor-pointer"
+            className="gap-1.5 text-xs cursor-pointer h-9"
           >
             <Sliders className="size-3.5" />
-            {showOptions ? "Hide Options" : "Options"}
+            {showOptions ? "Hide" : "Options"}
           </Button>
         </div>
       </div>
 
       {/* Granular Options Drawer */}
       {showOptions && mode === "general" && (
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-3 animate-in fade-in duration-200">
-          <h4 className="font-heading text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Custom Cleanup Rules
-          </h4>
+        <div className="rounded-2xl border border-border bg-card p-4 space-y-2.5 animate-in fade-in duration-200">
+          <span className="font-heading text-xs font-bold uppercase tracking-wider text-muted-foreground block">
+            Rules
+          </span>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={options.collapseSpaces}
                 onChange={(e) => setOptions({ ...options, collapseSpaces: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary size-4"
               />
-              <span>Collapse multiple spaces into 1</span>
+              <span>Collapse spaces</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -253,9 +251,9 @@ export function TextCleaner() {
                 type="checkbox"
                 checked={options.trimLines}
                 onChange={(e) => setOptions({ ...options, trimLines: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary size-4"
               />
-              <span>Trim start &amp; end of each line</span>
+              <span>Trim line edges</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -263,9 +261,9 @@ export function TextCleaner() {
                 type="checkbox"
                 checked={options.collapseBlankLines}
                 onChange={(e) => setOptions({ ...options, collapseBlankLines: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary size-4"
               />
-              <span>Collapse duplicate blank lines</span>
+              <span>Collapse empty lines</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -273,9 +271,9 @@ export function TextCleaner() {
                 type="checkbox"
                 checked={options.removeEmptyLines}
                 onChange={(e) => setOptions({ ...options, removeEmptyLines: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary size-4"
               />
-              <span>Remove ALL blank lines</span>
+              <span>Remove all blank lines</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -283,9 +281,9 @@ export function TextCleaner() {
                 type="checkbox"
                 checked={options.removeDuplicateLines}
                 onChange={(e) => setOptions({ ...options, removeDuplicateLines: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary size-4"
               />
-              <span>Remove duplicate lines</span>
+              <span>Remove duplicates</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -293,9 +291,9 @@ export function TextCleaner() {
                 type="checkbox"
                 checked={options.normalizeQuotes}
                 onChange={(e) => setOptions({ ...options, normalizeQuotes: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary size-4"
               />
-              <span>Convert smart quotes (“ ” &apos; ) to &quot;</span>
+              <span>Normalize curly quotes</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -303,9 +301,9 @@ export function TextCleaner() {
                 type="checkbox"
                 checked={options.normalizeDashes}
                 onChange={(e) => setOptions({ ...options, normalizeDashes: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary size-4"
               />
-              <span>Normalize em/en dashes (—, –) to -</span>
+              <span>Normalize dashes</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -313,22 +311,22 @@ export function TextCleaner() {
                 type="checkbox"
                 checked={options.removeInvisibleChars}
                 onChange={(e) => setOptions({ ...options, removeInvisibleChars: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary size-4"
               />
-              <span>Strip invisible zero-width Unicode</span>
+              <span>Strip invisible chars</span>
             </label>
           </div>
         </div>
       )}
 
       {/* Editor Side-by-Side Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Left: Input */}
         <div className="flex flex-col rounded-2xl border border-border bg-card p-4 shadow-xs">
-          <div className="flex items-center justify-between border-b border-border pb-3 mb-3">
+          <div className="flex items-center justify-between border-b border-border pb-2.5 mb-3">
             <div className="flex items-center gap-2">
               <span className="font-heading text-sm font-bold text-foreground">
-                Input Text
+                Input
               </span>
               <span className="font-mono text-xs text-muted-foreground">
                 ({inputText.length} chars)
@@ -341,7 +339,7 @@ export function TextCleaner() {
                 onClick={loadSample}
                 className="text-xs text-primary hover:underline font-medium cursor-pointer"
               >
-                Load Sample
+                Sample
               </button>
               {inputText && (
                 <button
@@ -359,18 +357,18 @@ export function TextCleaner() {
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={`Paste your messy text, email list, or copied notes here...\n\nExample: extra   spaces, duplicate blank lines, “curly quotes”, or list of contacts.`}
+            placeholder="Paste text here..."
             rows={12}
-            className="w-full resize-y rounded-xl border-0 bg-transparent p-2 font-mono text-xs text-foreground placeholder:text-muted-foreground outline-none leading-relaxed"
+            className="w-full resize-y rounded-xl border-0 bg-transparent p-2 font-mono text-sm text-foreground placeholder:text-muted-foreground outline-none leading-relaxed"
           />
         </div>
 
         {/* Right: Clean Output */}
         <div className="flex flex-col rounded-2xl border border-border bg-card p-4 shadow-xs">
-          <div className="flex items-center justify-between border-b border-border pb-3 mb-3">
+          <div className="flex items-center justify-between border-b border-border pb-2.5 mb-3">
             <div className="flex items-center gap-2">
               <span className="font-heading text-sm font-bold text-foreground">
-                Cleaned Output
+                Cleaned
               </span>
               <span className="font-mono text-xs text-muted-foreground">
                 ({cleanedOutput.length} chars)
@@ -383,7 +381,7 @@ export function TextCleaner() {
                 variant="outline"
                 disabled={!cleanedOutput}
                 onClick={handleCopy}
-                className="h-7 px-2.5 text-xs gap-1.5 cursor-pointer"
+                className="h-8 px-2.5 text-xs gap-1.5 cursor-pointer"
               >
                 {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
                 {copied ? "Copied!" : "Copy"}
@@ -394,7 +392,7 @@ export function TextCleaner() {
                 variant="outline"
                 disabled={!cleanedOutput}
                 onClick={handleDownload}
-                className="h-7 px-2.5 text-xs gap-1.5 cursor-pointer"
+                className="h-8 px-2.5 text-xs gap-1.5 cursor-pointer"
               >
                 <Download className="size-3" />
                 .txt
@@ -405,9 +403,9 @@ export function TextCleaner() {
           <textarea
             readOnly
             value={cleanedOutput}
-            placeholder="Cleaned output will appear here in real time..."
+            placeholder="Cleaned output will appear here..."
             rows={12}
-            className="w-full resize-y rounded-xl border-0 bg-transparent p-2 font-mono text-xs text-foreground placeholder:text-muted-foreground outline-none leading-relaxed"
+            className="w-full resize-y rounded-xl border-0 bg-transparent p-2 font-mono text-sm text-foreground placeholder:text-muted-foreground outline-none leading-relaxed"
           />
         </div>
       </div>

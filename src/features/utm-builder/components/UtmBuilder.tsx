@@ -6,9 +6,7 @@ import {
   Copy,
   Check,
   ExternalLink,
-  Sparkles,
   RotateCcw,
-  Sliders,
   Share2,
 } from "lucide-react";
 import {
@@ -21,27 +19,31 @@ import { validateUtmParams } from "../utils/utm-validator";
 import { CampaignHierarchyPreview } from "./CampaignHierarchyPreview";
 import { UtmValidatorAlerts } from "./UtmValidatorAlerts";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  FieldGroup,
+  Field,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { copyToClipboard } from "@/lib/utils";
 
 const MARKETING_PRESETS = [
   {
-    name: "Meta / Facebook Ads",
+    name: "Facebook Ads",
     icon: "📱",
     source: "facebook",
     medium: "paid_social",
-    campaign: "spring_sale_2026",
+    campaign: "spring_sale",
   },
   {
-    name: "Google Search (CPC)",
+    name: "Google Search",
     icon: "🔍",
     source: "google",
     medium: "cpc",
     campaign: "brand_search",
   },
   {
-    name: "LinkedIn Sponsored",
+    name: "LinkedIn",
     icon: "💼",
     source: "linkedin",
     medium: "paid_social",
@@ -52,21 +54,14 @@ const MARKETING_PRESETS = [
     icon: "📧",
     source: "newsletter",
     medium: "email",
-    campaign: "weekly_digest_issue_42",
+    campaign: "weekly_digest",
   },
   {
-    name: "Influencer / Affiliate",
-    icon: "⭐",
-    source: "instagram_influencer",
-    medium: "affiliate",
-    campaign: "summer_collab",
-  },
-  {
-    name: "WhatsApp Direct Share",
+    name: "WhatsApp",
     icon: "💬",
     source: "whatsapp",
     medium: "social_share",
-    campaign: "customer_vip_offer",
+    campaign: "vip_offer",
   },
 ];
 
@@ -75,8 +70,8 @@ export function UtmBuilder() {
     url: "https://example.com/pricing",
     source: "facebook",
     medium: "paid_social",
-    campaign: "summer_launch_2026",
-    content: "hero_cta_banner",
+    campaign: "summer_launch",
+    content: "banner_cta",
     term: "",
   });
   const [copied, setCopied] = useState(false);
@@ -124,8 +119,8 @@ export function UtmBuilder() {
   return (
     <div className="space-y-6">
       {/* 1-Click Marketing Presets */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-muted-foreground font-semibold">1-Click Presets:</span>
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="text-muted-foreground font-semibold mr-1">Presets:</span>
         {MARKETING_PRESETS.map((preset) => (
           <button
             key={preset.name}
@@ -144,7 +139,7 @@ export function UtmBuilder() {
         <div className="flex items-center justify-between border-b border-border pb-3">
           <h3 className="font-heading text-base font-bold text-foreground flex items-center gap-2">
             <LinkIcon className="size-4 text-primary" />
-            Campaign Parameters
+            Parameters
           </h3>
 
           <button
@@ -153,113 +148,97 @@ export function UtmBuilder() {
             className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1 cursor-pointer"
           >
             <RotateCcw className="size-3" />
-            Reset All
+            Reset
           </button>
         </div>
 
-        {/* Website URL */}
-        <div>
-          <Label htmlFor="target-url" className="text-xs font-semibold">
-            Website URL <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="target-url"
-            value={params.url}
-            onChange={(e) => update({ url: e.target.value })}
-            placeholder="https://yourbrand.com/landing-page"
-            className="mt-1 font-mono text-xs"
-          />
-          <p className="text-[11px] text-muted-foreground mt-1">
-            The destination page users will land on after clicking your link.
-          </p>
-        </div>
-
-        {/* Source & Medium */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="utm-source" className="text-xs font-semibold">
-              Campaign Source (<code className="text-primary font-mono">utm_source</code>) <span className="text-destructive">*</span>
-            </Label>
+        <FieldGroup className="gap-4">
+          {/* Website URL */}
+          <Field>
+            <FieldLabel htmlFor="target-url">
+              Website URL <span className="text-destructive">*</span>
+            </FieldLabel>
             <Input
-              id="utm-source"
-              value={params.source}
-              onChange={(e) => update({ source: e.target.value })}
-              placeholder="e.g. facebook, google, newsletter"
-              className="mt-1 text-xs font-mono"
+              id="target-url"
+              value={params.url}
+              onChange={(e) => update({ url: e.target.value })}
+              placeholder="https://yourbrand.com/page"
+              className="font-mono text-sm h-11"
             />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Referrer or platform (e.g. facebook, linkedin, twitter).
-            </p>
+          </Field>
+
+          {/* Source & Medium */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field>
+              <FieldLabel htmlFor="utm-source">
+                Source (<code className="text-primary font-mono text-xs">utm_source</code>) <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Input
+                id="utm-source"
+                value={params.source}
+                onChange={(e) => update({ source: e.target.value })}
+                placeholder="e.g. facebook, google, newsletter"
+                className="text-sm font-mono h-11"
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="utm-medium">
+                Medium (<code className="text-primary font-mono text-xs">utm_medium</code>) <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Input
+                id="utm-medium"
+                value={params.medium}
+                onChange={(e) => update({ medium: e.target.value })}
+                placeholder="e.g. cpc, paid_social, email"
+                className="text-sm font-mono h-11"
+              />
+            </Field>
           </div>
 
-          <div>
-            <Label htmlFor="utm-medium" className="text-xs font-semibold">
-              Campaign Medium (<code className="text-primary font-mono">utm_medium</code>) <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="utm-medium"
-              value={params.medium}
-              onChange={(e) => update({ medium: e.target.value })}
-              placeholder="e.g. cpc, paid_social, email"
-              className="mt-1 text-xs font-mono"
-            />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Marketing medium for GA4 channel grouping (e.g. cpc, email).
-            </p>
-          </div>
-        </div>
+          {/* Campaign Name & Content */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field>
+              <FieldLabel htmlFor="utm-campaign">
+                Campaign (<code className="text-primary font-mono text-xs">utm_campaign</code>)
+              </FieldLabel>
+              <Input
+                id="utm-campaign"
+                value={params.campaign}
+                onChange={(e) => update({ campaign: e.target.value })}
+                placeholder="e.g. promo_spring"
+                className="text-sm font-mono h-11"
+              />
+            </Field>
 
-        {/* Campaign Name & Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="utm-campaign" className="text-xs font-semibold">
-              Campaign Name (<code className="text-primary font-mono">utm_campaign</code>)
-            </Label>
-            <Input
-              id="utm-campaign"
-              value={params.campaign}
-              onChange={(e) => update({ campaign: e.target.value })}
-              placeholder="e.g. ramadan_sale_2026"
-              className="mt-1 text-xs font-mono"
-            />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Product, promo code, or slogan (e.g. summer_promo).
-            </p>
+            <Field>
+              <FieldLabel htmlFor="utm-content">
+                Content (<code className="text-primary font-mono text-xs">utm_content</code>)
+              </FieldLabel>
+              <Input
+                id="utm-content"
+                value={params.content}
+                onChange={(e) => update({ content: e.target.value })}
+                placeholder="e.g. header_cta"
+                className="text-sm font-mono h-11"
+              />
+            </Field>
           </div>
 
-          <div>
-            <Label htmlFor="utm-content" className="text-xs font-semibold">
-              Campaign Content (<code className="text-primary font-mono">utm_content</code>)
-            </Label>
+          {/* Campaign Term (Optional) */}
+          <Field>
+            <FieldLabel htmlFor="utm-term">
+              Keyword / Term (<code className="text-primary font-mono text-xs">utm_term</code>)
+            </FieldLabel>
             <Input
-              id="utm-content"
-              value={params.content}
-              onChange={(e) => update({ content: e.target.value })}
-              placeholder="e.g. logolink, blue_button_v1"
-              className="mt-1 text-xs font-mono"
+              id="utm-term"
+              value={params.term}
+              onChange={(e) => update({ term: e.target.value })}
+              placeholder="e.g. running+shoes"
+              className="text-sm font-mono h-11"
             />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Used for A/B testing ad variations or creatives.
-            </p>
-          </div>
-        </div>
-
-        {/* Campaign Term (Optional) */}
-        <div>
-          <Label htmlFor="utm-term" className="text-xs font-semibold">
-            Campaign Term (<code className="text-primary font-mono">utm_term</code>)
-          </Label>
-          <Input
-            id="utm-term"
-            value={params.term}
-            onChange={(e) => update({ term: e.target.value })}
-            placeholder="e.g. running+shoes, cheap+web+hosting"
-            className="mt-1 text-xs font-mono"
-          />
-          <p className="text-[11px] text-muted-foreground mt-1">
-            Paid search keyword (usually used for Google Ads search terms).
-          </p>
-        </div>
+          </Field>
+        </FieldGroup>
       </div>
 
       {/* Campaign Hierarchy Key Visualizer */}
@@ -273,27 +252,22 @@ export function UtmBuilder() {
       />
 
       {/* Final Generated URL Output Box */}
-      <div className="rounded-2xl border border-primary/40 bg-card p-6 shadow-md space-y-4">
+      <div className="rounded-2xl border border-primary/40 bg-card p-5 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
-          <div>
-            <h3 className="font-heading text-base font-bold text-foreground flex items-center gap-2">
-              <Share2 className="size-4 text-primary" />
-              Generated Campaign Tracking URL
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Ready to use in ad campaigns, newsletters, and social posts.
-            </p>
-          </div>
+          <h3 className="font-heading text-base font-bold text-foreground flex items-center gap-2">
+            <Share2 className="size-4 text-primary" />
+            Generated Tracking URL
+          </h3>
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <Button
               size="sm"
               onClick={handleCopy}
               disabled={!finalUrl}
-              className="gap-1.5 text-xs font-bold cursor-pointer"
+              className="gap-1.5 text-xs font-bold cursor-pointer h-9"
             >
               {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-              {copied ? "Copied Link!" : "Copy URL"}
+              {copied ? "Copied!" : "Copy URL"}
             </Button>
 
             {finalUrl && (
@@ -301,19 +275,19 @@ export function UtmBuilder() {
                 href={finalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer h-9"
               >
                 <ExternalLink className="size-3.5" />
-                Test Link
+                Open
               </a>
             )}
           </div>
         </div>
 
         {/* URL Box */}
-        <div className="rounded-xl border border-border bg-muted/50 p-4">
+        <div className="rounded-xl border border-border bg-muted/50 p-3.5">
           <p className="font-mono text-xs text-foreground break-all leading-relaxed select-all">
-            {finalUrl || "Please enter a destination website URL above..."}
+            {finalUrl || "Enter a website URL above..."}
           </p>
         </div>
       </div>
