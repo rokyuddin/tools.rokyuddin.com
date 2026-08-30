@@ -1,36 +1,148 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ROKY TOOLS — [tools.rokyuddin.com](https://tools.rokyuddin.com)
 
-## Getting Started
+> **Simple tools for small everyday problems. Free. Fast. No signup.**
 
-First, run the development server:
+**Roky Tools** is a curated collection of fast, lightweight, and privacy-friendly online utilities. Every tool solves one specific problem extremely well with **100% in-browser execution**, zero mandatory accounts, and no intrusive subscriptions.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## ✨ Available Tools
+
+| Tool | Route | Description |
+|---|---|---|
+| **WhatsApp Link Generator** | [`/tools/whatsapp-link`](https://tools.rokyuddin.com/tools/whatsapp-link) | Generate instant WhatsApp click-to-chat links with country codes, custom pre-filled messages, high-res QR codes, and HTML embed buttons. |
+| **BDT Amount to Words** | [`/tools/bdt-to-words`](https://tools.rokyuddin.com/tools/bdt-to-words) | Convert numeric Bangladeshi Taka (BDT ৳) amounts into written English and formal Bangla (বাংলা) words for bank cheques, tax invoices, and legal deeds. Supports Bengali numerals (`১২৫৫০০`) and decimal paisa. |
+| **Image Compressor** | [`/tools/image-compressor`](https://tools.rokyuddin.com/tools/image-compressor) | Compress JPG, PNG, and WebP images up to 80% smaller directly inside your browser. Features live side-by-side comparison and batch downloads. |
+| **Image → WebP Converter** | [`/tools/image-to-webp`](https://tools.rokyuddin.com/tools/image-to-webp) | Convert JPG, PNG, GIF, and BMP into Google's modern WebP format with quality adjustment and batch processing. |
+| **Screenshot Color Extractor** | [`/tools/color-extractor`](https://tools.rokyuddin.com/tools/color-extractor) | Paste screenshots directly (`Ctrl+V`) or upload images to auto-detect dominant color palettes, inspect exact pixels with an interactive 10x loupe eyedropper, and view WCAG contrast scores. |
+| **Social Media Resizer** | [`/tools/social-resizer`](https://tools.rokyuddin.com/tools/social-resizer) | Crop and resize images for Instagram, Facebook, LinkedIn, X (Twitter), and YouTube with smart background blur and fill modes. |
+
+---
+
+## 🔒 Privacy Architecture
+
+At Roky Tools, privacy is built directly into the technical architecture:
+
+* **100% In-Browser Execution**: All image compression, WebP conversions, palette extractions, and calculations happen on your device via HTML5 Canvas and Web APIs.
+* **Zero Server Uploads**: Your images, text, and data never leave your browser and are never uploaded to any remote server or database.
+* **No Signup or Tracking**: No accounts, passwords, or intrusive session tracking.
+
+---
+
+## 🛠️ Technology Stack
+
+* **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Turbopack, React 19)
+* **Language**: [TypeScript](https://www.typescriptlang.org/)
+* **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/) (`@base-ui/react`, `lucide-react`)
+* **Typography**: DM Sans (Body) & Nunito Sans (Headings)
+* **Testing**: Node.js Test Runner (`node:test`, `node:assert/strict`)
+* **Linter & Formatter**: [Biome](https://biomejs.dev/)
+* **Creator Support**: [SupportKori](https://www.supportkori.com/mdrokyuddin)
+
+---
+
+## 📁 Architecture & Directory Structure
+
+```text
+src/
+├── app/
+│   ├── layout.tsx                     # Root layout with SupportKori widget script
+│   ├── page.tsx                       # Homepage with instant search & category clusters
+│   ├── tools/
+│   │   ├── page.tsx                   # Searchable full tools directory
+│   │   ├── whatsapp-link/page.tsx     # WhatsApp Link Generator route
+│   │   ├── bdt-to-words/page.tsx      # BDT Amount to Words route
+│   │   ├── image-compressor/page.tsx  # Image Compressor route
+│   │   ├── image-to-webp/page.tsx     # Image to WebP route
+│   │   ├── color-extractor/page.tsx   # Color Extractor route
+│   │   └── social-resizer/page.tsx    # Social Media Resizer route
+│   ├── privacy/page.tsx               # Privacy policy & architecture pledge
+│   ├── sitemap.ts                     # Dynamic Next.js sitemap
+│   └── robots.ts                      # Robots.txt
+│
+├── config/
+│   ├── site.ts                        # Site metadata, creator links, SupportKori URL
+│   └── tools.ts                       # Central Tool Registry (metadata, SEO, FAQs, related tools)
+│
+├── components/
+│   ├── ui/                            # Accessible Base UI primitives (Button, Card, Input, Slider, etc.)
+│   ├── layout/                        # Header, Footer, SearchDialog (Cmd+K)
+│   ├── tool-shell/                    # Standardized ToolShell, ToolCard, ToolFeedback
+│   ├── upload/                        # UploadDropzone with drag-drop and Ctrl+V paste
+│   └── common/                        # CopyButton, DownloadButton
+│
+├── features/                          # Self-contained feature business logic
+│   ├── whatsapp-link/
+│   ├── bdt-to-words/
+│   ├── image-compressor/
+│   ├── image-to-webp/
+│   ├── color-extractor/
+│   └── social-resizer/
+│
+└── lib/
+    └── utils.ts                       # Formatting and helper utilities
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
 
-## Learn More
+* [Node.js](https://nodejs.org/) v20+ (tested on v24)
+* [pnpm](https://pnpm.io/) v10+
 
-To learn more about Next.js, take a look at the following resources:
+### Installation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Clone repository
+git clone https://github.com/mdrokyuddin/tools.rokyuddin.com.git
+cd tools.rokyuddin.com
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Install dependencies
+pnpm install
+```
 
-## Deploy on Vercel
+### Development Server
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Running Unit Tests
+
+```bash
+pnpm test
+```
+
+### Production Build
+
+```bash
+pnpm build
+pnpm start
+```
+
+---
+
+## ☕ Support the Project
+
+Roky Tools is completely free to use without paywalls or ads. If these tools saved you time, you can support ongoing development on SupportKori:
+
+👉 **[Support on SupportKori](https://www.supportkori.com/mdrokyuddin)**
+
+---
+
+## 👤 Author
+
+**Md Rokyuddin**
+* Website: [rokyuddin.com](https://rokyuddin.com)
+* Tools Platform: [tools.rokyuddin.com](https://tools.rokyuddin.com)
+* Support: [supportkori.com/mdrokyuddin](https://www.supportkori.com/mdrokyuddin)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
