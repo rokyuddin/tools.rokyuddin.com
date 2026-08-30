@@ -14,7 +14,7 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -331,6 +331,7 @@ export function ReelsDownloader() {
             {/* Download Button with Popover Quality Picker */}
             <div className="relative" ref={popoverRef}>
               <Button
+                type="button"
                 size="lg"
                 onClick={() => {
                   if (downloadOptions.length <= 1 && result.downloadUrl) {
@@ -339,13 +340,13 @@ export function ReelsDownloader() {
                     setIsDownloadMenuOpen((prev) => !prev);
                   }
                 }}
-                className="w-full rounded-2xl font-bold py-5 gap-2 bg-primary text-primary-foreground shadow-xs hover:opacity-90 cursor-pointer"
+                className="w-full h-11 rounded-2xl font-bold flex flex-row items-center justify-center gap-2 bg-primary text-primary-foreground shadow-xs hover:opacity-90 cursor-pointer"
               >
-                <Download className="size-4" />
+                <Download className="size-4 shrink-0" />
                 <span>Download Video</span>
                 <ChevronDown
                   className={cn(
-                    "size-4 opacity-70 transition-transform duration-200",
+                    "size-4 shrink-0 opacity-70 transition-transform duration-200",
                     isDownloadMenuOpen && "rotate-180"
                   )}
                 />
@@ -372,13 +373,13 @@ export function ReelsDownloader() {
                     >
                       <div className="flex items-center gap-2">
                         {opt.format === "mp3" ? (
-                          <Music className="size-4 text-primary" />
+                          <Music className="size-4 text-primary shrink-0" />
                         ) : (
-                          <Film className="size-4 text-primary" />
+                          <Film className="size-4 text-primary shrink-0" />
                         )}
                         <span>{opt.label}</span>
                       </div>
-                      <Download className="size-3.5 opacity-60" />
+                      <Download className="size-3.5 opacity-60 shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -387,21 +388,18 @@ export function ReelsDownloader() {
 
             {/* Open in New Tab Button */}
             {result.downloadUrl && (
-              <Button
-                variant="outline"
-                size="lg"
-                asChild
-                className="w-full rounded-2xl font-semibold py-5 gap-2 text-foreground cursor-pointer"
+              <a
+                href={result.downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "w-full h-11 rounded-2xl font-semibold inline-flex flex-row items-center justify-center gap-2 text-foreground cursor-pointer"
+                )}
               >
-                <a
-                  href={result.downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="size-4" />
-                  <span>Open in New Tab</span>
-                </a>
-              </Button>
+                <ExternalLink className="size-4 shrink-0" />
+                <span>Open in New Tab</span>
+              </a>
             )}
           </div>
         </Card>
