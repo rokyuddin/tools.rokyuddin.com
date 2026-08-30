@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { UploadCloud, Image as ImageIcon, AlertCircle } from "lucide-react";
+import { UploadCloud, Image as ImageIcon, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,10 @@ interface UploadDropzoneProps {
   title?: string;
   subtitle?: string;
   enableClipboardPaste?: boolean;
+  sampleAction?: {
+    label: string;
+    onClick: () => void;
+  };
   onFilesSelected: (files: File[]) => void;
   className?: string;
 }
@@ -23,6 +27,7 @@ export function UploadDropzone({
   title = "Drop your images here, or browse",
   subtitle = "Supports JPG, PNG, WebP, GIF, BMP. Up to 50MB.",
   enableClipboardPaste = true,
+  sampleAction,
   onFilesSelected,
   className,
 }: UploadDropzoneProps) {
@@ -171,6 +176,21 @@ export function UploadDropzone({
             <span className="hidden sm:inline-flex items-center text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-md border border-border">
               or press <kbd className="font-mono font-semibold mx-1">Ctrl+V</kbd> to paste
             </span>
+          )}
+          {sampleAction && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                sampleAction.onClick();
+              }}
+              className="text-xs cursor-pointer z-10 hover:bg-background"
+            >
+              <Sparkles className="size-3.5 mr-1.5 text-primary" />
+              {sampleAction.label}
+            </Button>
           )}
         </div>
       </div>

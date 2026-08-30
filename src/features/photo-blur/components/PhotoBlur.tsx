@@ -11,16 +11,15 @@ import {
   Download,
   Copy,
   Check,
-  Upload,
-  Image as ImageIcon,
   RotateCcw,
-  Sparkles,
   Sliders,
+  Crosshair,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { UploadDropzone } from "@/components/upload/UploadDropzone";
 import type { RedactionMode, RedactionRect } from "../types";
 import {
   normalizeRect,
@@ -51,13 +50,13 @@ const MODES: Array<{
     id: "blackout",
     label: "Black Box",
     icon: Square,
-    description: "Solid dark redaction bar",
+    description: "Solid dark redaction",
   },
   {
     id: "whiteout",
     label: "White Box",
     icon: Square,
-    description: "Solid white redaction bar",
+    description: "Solid white redaction",
   },
 ];
 
@@ -107,6 +106,16 @@ export function PhotoBlur() {
   const handleClearAll = () => {
     if (rectangles.length === 0) return;
     pushHistory([]);
+  };
+
+  const handleReset = () => {
+    setImage(null);
+    setRectangles([]);
+    setHistory([[]]);
+    setHistoryIndex(0);
+    setIsDrawing(false);
+    setStartPoint(null);
+    setCurrentPoint(null);
   };
 
   // Keyboard shortcut for Undo / Redo
@@ -165,6 +174,11 @@ export function PhotoBlur() {
       img.src = e.target?.result as string;
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleFilesSelected = (files: File[]) => {
+    if (files.length === 0) return;
+    loadImageFile(files[0]);
   };
 
   // Re-render canvas whenever image or rectangles change
@@ -344,244 +358,266 @@ export function PhotoBlur() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Upload State */}
-      {!image ? (
-        <Card className="p-8 sm:p-12 text-center rounded-3xl border-2 border-dashed border-border/80 bg-card/60 backdrop-blur-xs hover:border-primary/50 transition-colors">
-          <div className="flex flex-col items-center justify-center max-w-md mx-auto space-y-4">
-            <div className="size-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">
-              <ImageIcon className="size-8 stroke-1.5" />
-            </div>
+    <div className="space-y-8">
+      {/* Upload Zone */}
+      {!image && (
+        <UploadDropzone
+          title="Paste screenshot or upload image"
+          subtitle="Press Ctrl+V to paste a screenshot directly from your clipboard, or browse."
+          onFilesSelected={handleFilesSelected}
+          sampleAction={{
+            label: "Try Sample Image",
+            onClick: handleLoadSample,
+          }}
+        />
+      )}
 
-            <div className="space-y-1.5">
-              <h3 className="font-heading text-lg sm:text-xl font-bold text-foreground">
-                Upload or Paste an Image
-              </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Drag and drop your screenshot, photo, or press{" "}
-                <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-xs font-mono">
-                  Ctrl+V
-                </kbd>{" "}
-                to paste from clipboard.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) loadImageFile(file);
-                  }}
-                  className="hidden"
-                />
-                <Button size="lg" asChild className="rounded-2xl font-semibold gap-2">
-                  <span>
-                    <Upload className="size-4" />
-                    Browse Photo
-                  </span>
-                </Button>
-              </label>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={handleLoadSample}
-                className="rounded-2xl font-semibold gap-2"
-              >
-                <Sparkles className="size-4 text-primary" />
-                Try Sample Image
-              </Button>
-            </div>
-          </div>
-        </Card>
-      ) : (
-        /* Active Redaction Editor */
-        <div className="space-y-4">
-          {/* Top Controls Toolbar */}
-          <Card className="p-3 sm:p-4 rounded-3xl border-border/80 bg-card/80 shadow-xs space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              {/* Mode Selectors */}
-              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-muted/60 border border-border/50">
-                {MODES.map((m) => {
-                  const Icon = m.icon;
-                  const isActive = currentMode === m.id;
-
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => {
-                        setCurrentMode(m.id);
-                        if (m.id === "pixelate" && strength > 40) setStrength(16);
-                        if (m.id === "blur" && strength > 30) setStrength(12);
-                      }}
-                      className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer select-none",
-                        isActive
-                          ? "bg-background text-foreground shadow-xs font-semibold"
-                          : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                      )}
-                    >
-                      <Icon
-                        className={cn(
-                          "size-3.5",
-                          m.id === "blackout" && "fill-foreground",
-                          m.id === "whiteout" && "fill-background stroke-foreground"
-                        )}
-                      />
-                      <span>{m.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* History & Reset Actions */}
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleUndo}
-                  disabled={historyIndex <= 0}
-                  className="size-9 p-0 rounded-xl"
-                  title="Undo (Ctrl+Z)"
-                >
-                  <Undo2 className="size-4" />
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRedo}
-                  disabled={historyIndex >= history.length - 1}
-                  className="size-9 p-0 rounded-xl"
-                  title="Redo (Ctrl+Y)"
-                >
-                  <Redo2 className="size-4" />
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearAll}
-                  disabled={rectangles.length === 0}
-                  className="size-9 p-0 rounded-xl text-muted-foreground hover:text-destructive"
-                  title="Clear all redactions"
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setImage(null)}
-                  className="h-9 px-2.5 text-xs text-muted-foreground rounded-xl gap-1"
-                  title="Change image"
-                >
-                  <RotateCcw className="size-3.5" />
-                  <span>New</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Intensity / Strength Slider (for Pixelate & Blur) */}
-            {(currentMode === "pixelate" || currentMode === "blur") && (
-              <div className="flex items-center gap-4 pt-1 border-t border-border/50 text-xs">
-                <div className="flex items-center gap-1.5 text-muted-foreground shrink-0 font-medium">
-                  <Sliders className="size-3.5" />
-                  <span>
-                    {currentMode === "pixelate" ? "Pixel Block Size:" : "Blur Radius:"}
-                  </span>
-                  <span className="text-foreground font-bold">{strength}px</span>
+      {image && (
+        <div className="grid gap-8 lg:grid-cols-12 items-start">
+          {/* Main Canvas Workspace */}
+          <Card className="lg:col-span-8 border-border shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex flex-wrap items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <Droplets className="size-5 text-primary" />
+                  Redaction Canvas
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleUndo}
+                    disabled={historyIndex <= 0}
+                    className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    title="Undo (Ctrl+Z)"
+                  >
+                    <Undo2 className="size-3.5 mr-1" />
+                    Undo
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRedo}
+                    disabled={historyIndex >= history.length - 1}
+                    className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    title="Redo (Ctrl+Y)"
+                  >
+                    <Redo2 className="size-3.5 mr-1" />
+                    Redo
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearAll}
+                    disabled={rectangles.length === 0}
+                    className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
+                    title="Clear all redactions"
+                  >
+                    <Trash2 className="size-3.5 mr-1" />
+                    Clear
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleReset}
+                    className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                    title="Upload new image"
+                  >
+                    <RotateCcw className="size-3 mr-1" />
+                    Upload New
+                  </Button>
                 </div>
+              </CardTitle>
+            </CardHeader>
 
-                <div className="flex-1 max-w-xs">
-                  <Slider
-                    value={strength}
-                    min={currentMode === "pixelate" ? 4 : 2}
-                    max={currentMode === "pixelate" ? 40 : 30}
-                    step={2}
-                    onValueChange={(val) => setStrength(val)}
-                  />
-                </div>
+            <CardContent className="space-y-4">
+              {/* Status and instruction bar */}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Crosshair className="size-3.5 text-primary" />
+                  Click and drag to redact sensitive areas (names, cards, faces, emails)
+                </span>
+                <Badge variant="outline" className="text-[11px] font-normal shrink-0">
+                  {rectangles.length} area{rectangles.length === 1 ? "" : "s"} redacted
+                </Badge>
               </div>
-            )}
-          </Card>
 
-          {/* Interactive Canvas Viewport */}
-          <Card className="p-2 sm:p-4 rounded-3xl border-border/80 bg-black/5 dark:bg-black/40 overflow-hidden flex items-center justify-center min-h-[360px]">
-            <div
-              ref={containerRef}
-              className="relative select-none cursor-crosshair max-w-full overflow-hidden rounded-2xl shadow-sm inline-block"
-              onMouseDown={handlePointerDown}
-              onMouseMove={handlePointerMove}
-              onMouseUp={handlePointerUp}
-              onTouchStart={handlePointerDown}
-              onTouchMove={handlePointerMove}
-              onTouchEnd={handlePointerUp}
-            >
-              <canvas
-                ref={canvasRef}
-                className="max-w-full max-h-[70vh] object-contain rounded-2xl block"
-              />
-
-              {/* Real-time selection bounding box indicator */}
-              {isDrawing && dragBoxStyle && (
+              {/* Canvas viewport container */}
+              <div className="relative overflow-hidden rounded-xl border border-border bg-muted/30 flex items-center justify-center min-h-[320px] max-h-[560px] p-2">
                 <div
-                  style={dragBoxStyle}
-                  className="absolute pointer-events-none border-2 border-dashed border-primary bg-primary/20 rounded-xs shadow-xs"
-                />
-              )}
-            </div>
+                  ref={containerRef}
+                  className="relative select-none cursor-crosshair max-w-full inline-block"
+                  onMouseDown={handlePointerDown}
+                  onMouseMove={handlePointerMove}
+                  onMouseUp={handlePointerUp}
+                  onTouchStart={handlePointerDown}
+                  onTouchMove={handlePointerMove}
+                  onTouchEnd={handlePointerUp}
+                >
+                  <canvas
+                    ref={canvasRef}
+                    className="max-h-[520px] max-w-full object-contain block rounded-lg shadow-xs"
+                  />
+
+                  {/* Real-time selection bounding box indicator */}
+                  {isDrawing && dragBoxStyle && (
+                    <div
+                      style={dragBoxStyle}
+                      className="absolute pointer-events-none border-2 border-dashed border-primary bg-primary/20 rounded-xs shadow-xs"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Helpful footer hints */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground pt-1">
+                <span>
+                  Shortcuts: <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-semibold">Ctrl+Z</kbd> Undo, <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-semibold">Ctrl+Y</kbd> Redo
+                </span>
+                <span>100% In-Browser Privacy</span>
+              </div>
+            </CardContent>
           </Card>
 
-          {/* Bottom Export Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <Badge variant="outline" className="text-[11px] font-normal">
-                {rectangles.length} area{rectangles.length === 1 ? "" : "s"} redacted
-              </Badge>
-              <span>100% in-browser privacy</span>
-            </div>
+          {/* Right Column: Settings & Export Controls */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Redaction Mode / Effect Card */}
+            <Card className="border-border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Sliders className="size-4 text-primary" />
+                  Redaction Effect
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {MODES.map((m) => {
+                    const Icon = m.icon;
+                    const isActive = currentMode === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => {
+                          setCurrentMode(m.id);
+                          if (m.id === "pixelate" && strength > 40) setStrength(16);
+                          if (m.id === "blur" && strength > 30) setStrength(12);
+                        }}
+                        className={cn(
+                          "group relative flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer",
+                          isActive
+                            ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
+                            : "border-border hover:border-primary/50 hover:bg-muted/40"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <Icon
+                            className={cn(
+                              "size-4",
+                              isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                              m.id === "blackout" && "fill-current",
+                              m.id === "whiteout" && "fill-background stroke-current"
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "text-xs font-semibold",
+                              isActive ? "text-primary" : "text-foreground"
+                            )}
+                          >
+                            {m.label}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-muted-foreground leading-tight">
+                          {m.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={handleCopyToClipboard}
-                className="flex-1 sm:flex-none rounded-2xl font-semibold gap-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="size-4 text-emerald-500" />
-                    Copied to Clipboard!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="size-4" />
-                    Copy Image
-                  </>
+                {/* Intensity Slider */}
+                {(currentMode === "pixelate" || currentMode === "blur") && (
+                  <div className="space-y-2.5 pt-3 border-t border-border/60">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-foreground">
+                        {currentMode === "pixelate" ? "Pixel Block Size:" : "Blur Radius:"}
+                      </span>
+                      <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
+                        {strength}px
+                      </span>
+                    </div>
+                    <Slider
+                      value={strength}
+                      min={currentMode === "pixelate" ? 4 : 2}
+                      max={currentMode === "pixelate" ? 40 : 30}
+                      step={2}
+                      onValueChange={(val) => setStrength(val)}
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>Light</span>
+                      <span>Default ({currentMode === "pixelate" ? "16px" : "12px"})</span>
+                      <span>Heavy</span>
+                    </div>
+                  </div>
                 )}
-              </Button>
+              </CardContent>
+            </Card>
 
-              <Button
-                type="button"
-                size="lg"
-                onClick={() => handleDownload("png")}
-                className="flex-1 sm:flex-none rounded-2xl font-bold gap-2 bg-primary text-primary-foreground shadow-xs hover:opacity-90"
-              >
-                <Download className="size-4" />
-                Download PNG
-              </Button>
-            </div>
+            {/* Export & Save Card */}
+            <Card className="border-border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Download className="size-4 text-primary" />
+                  Export & Share
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyToClipboard}
+                  className="w-full justify-center gap-2 font-semibold h-10"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="size-4 text-emerald-500" />
+                      Copied to Clipboard!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-4 text-muted-foreground" />
+                      Copy Image to Clipboard
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={() => handleDownload("png")}
+                  className="w-full justify-center gap-2 font-semibold h-10"
+                >
+                  <Download className="size-4" />
+                  Download PNG
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => handleDownload("jpeg")}
+                  className="w-full justify-center gap-2 font-medium text-xs h-9 text-muted-foreground hover:text-foreground"
+                >
+                  Download JPG
+                </Button>
+
+                <div className="pt-2">
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/40 border border-border text-[11px] text-muted-foreground leading-normal">
+                    <Check className="size-3.5 text-emerald-500 shrink-0" />
+                    <span>Redactions permanently replace pixel data before export.</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}
