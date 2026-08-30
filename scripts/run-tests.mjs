@@ -56,6 +56,12 @@ import {
   isValidSocialUrl,
 } from "../src/features/reels-downloader/utils/url-detector.ts";
 
+// 8. Photo Blur & Redaction
+import {
+  normalizeRect,
+  clampRectToBounds,
+} from "../src/features/photo-blur/utils/canvas-redactor.ts";
+
 console.log("🚀 Running OmniTools Unit Tests...\n");
 
 let passed = 0;
@@ -398,6 +404,28 @@ test("Validate social URLs", () => {
   assert.equal(isValidSocialUrl("https://www.instagram.com/reel/123/"), true);
   assert.equal(isValidSocialUrl("https://google.com/search?q=test"), false);
   assert.equal(isValidSocialUrl("not-a-url"), false);
+});
+
+// 10. Photo Blur & Privacy Redaction Tests
+console.log("\n=== Photo Blur & Privacy Redaction ===");
+test("Normalize reverse drag rectangle (bottom-right to top-left)", () => {
+  const norm = normalizeRect(200, 150, 50, 40);
+  assert.equal(norm.x, 50);
+  assert.equal(norm.y, 40);
+  assert.equal(norm.width, 150);
+  assert.equal(norm.height, 110);
+});
+
+test("Clamp rectangle exceeding canvas bounds", () => {
+  const clamped = clampRectToBounds(
+    { x: 900, y: 550, width: 200, height: 100 },
+    1000,
+    600
+  );
+  assert.equal(clamped.x, 900);
+  assert.equal(clamped.y, 550);
+  assert.equal(clamped.width, 100);
+  assert.equal(clamped.height, 50);
 });
 
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);

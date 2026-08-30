@@ -29,6 +29,71 @@ export interface ToolDefinition {
 
 export const toolsRegistry: ToolDefinition[] = [
   {
+    slug: "blur-image",
+    name: "Photo Blur & Privacy Redaction Tool",
+    tagline: "Blur, pixelate, or blackout sensitive text, passwords, faces & phone numbers in photos",
+    description: "Censor sensitive information in screenshots and photos before sharing. Features interactive pixelate mosaic, Gaussian blur, blackout bars, and whiteout boxes with 100% in-browser privacy.",
+    category: "Images",
+    popular: true,
+    isNew: true,
+    badges: ["100% In-Browser", "Pixelate & Blur", "One-Click Copy", "Undo / Redo"],
+    keywords: [
+      "blur image",
+      "pixelate image online",
+      "blur screenshot",
+      "hide text in image",
+      "censor photo",
+      "redact image",
+      "privacy brush",
+      "blackout image",
+      "mosaic blur tool",
+    ],
+    features: [
+      "Multiple Redaction Modes: Pixelate Mosaic, Smooth Blur, Blackout Box, and Whiteout Box",
+      "Live adjustable strength slider (custom pixel block size & blur radius)",
+      "Drag-to-select redaction boxes over sensitive phone numbers, emails, addresses, and faces",
+      "Full Undo / Redo history stack with Ctrl+Z keyboard shortcuts",
+      "One-click 'Copy Image to Clipboard' for instant pasting into Slack, Discord, WhatsApp, or Gmail",
+      "100% Client-Side Canvas execution — your personal photos never leave your device",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Upload or Paste Image",
+        description: "Drag and drop your screenshot or press Ctrl+V to paste directly from your clipboard.",
+      },
+      {
+        step: 2,
+        title: "Choose Effect & Drag Over Sensitive Areas",
+        description: "Select Pixelate, Blur, Black Box, or White Box, and drag your cursor over any private details.",
+      },
+      {
+        step: 3,
+        title: "Copy or Download",
+        description: "Click 'Copy Image' to paste anywhere, or download as a high-resolution PNG file.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Are my sensitive screenshots uploaded to your server?",
+        answer: "No! All blurring, pixelation, and image rendering happen 100% locally in your web browser memory using HTML5 Canvas. Zero data is ever sent across the network.",
+      },
+      {
+        question: "What is the difference between Pixelate and Blur?",
+        answer: "Pixelate creates a classic retro mosaic grid (censor blocks) over the selected region, while Blur applies a soft Gaussian smoothing effect.",
+      },
+      {
+        question: "Can blurred or pixelated text be reversed or un-blurred?",
+        answer: "No. When you export or copy the image, the underlying pixel data is permanently replaced with the blended color mosaic/blur on canvas bitmap level, making it cryptographically unrecoverable.",
+      },
+      {
+        question: "Can I paste directly from my clipboard?",
+        answer: "Yes! Simply take a screenshot with your OS shortcut (Snipping Tool, Cmd+Shift+4, PrintScreen) and press Ctrl+V / Cmd+V on the page.",
+      },
+    ],
+    relatedToolSlugs: ["color-extractor", "social-resizer", "image-compressor"],
+  },
+  {
     slug: "reels-downloader",
     name: "Universal Reels & Video Downloader",
     tagline: "Download Instagram Reels, TikTok without watermark, Facebook Reels, YouTube Shorts & X videos",
