@@ -33,6 +33,136 @@ function cleanEscapedUrl(raw: string): string {
     .replace(/&amp;/g, "&");
 }
 
+function extractInstagramShortcode(url: string): string | null {
+  const match = url.match(/(?:reel|p|reels)\/([A-Za-z0-9_-]+)/i);
+  return match ? match[1] : null;
+}
+
+/**
+ * Direct Instagram Reel / Video extraction
+ */
+async function extractInstagramDirect(targetUrl: string): Promise<ReelApiResponse | null> {
+  const shortcode = extractInstagramShortcode(targetUrl);
+  if (!shortcode) return null;
+
+  // Strategy 1: Instagram Embed Page Scraping (no login required)
+  try {
+    const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+    const res = await fetch(embedUrl, {
+      headers: {
+        "User-Agent": USER_AGENTS[0],
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-User": "?1",
+        "Sec-Fetch-Dest": "document",
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const html = await res.text();
+
+      const videoMatch =
+        html.match(/\\"video_url\\":\\"([^"]+)\\"/) ||
+        html.match(/"video_url":"([^"]+)"/) ||
+        html.match(/class="EmbeddedMediaVideo"[^>]+src="([^"]+)"/i) ||
+        html.match(/<video[^>]+src="([^"]+)"/i);
+
+      const thumbMatch =
+        html.match(/\\"display_url\\":\\"([^"]+)\\"/) ||
+        html.match(/"display_url":"([^"]+)"/) ||
+        html.match(/class="EmbeddedMediaImage"[^>]+src="([^"]+)"/i);
+
+      const titleMatch =
+        html.match(/class="Caption"[^>]*>([^<]+)<\/div>/i) ||
+        html.match(/<title>([^<]+)<\/title>/i);
+
+      if (videoMatch) {
+        const videoUrl = cleanEscapedUrl(videoMatch[1]);
+        const thumbUrl = thumbMatch ? cleanEscapedUrl(thumbMatch[1]) : undefined;
+        const title = titleMatch ? titleMatch[1].replace(/Instagram/i, "").trim() : "Instagram Reel";
+
+        return {
+          success: true,
+          platform: "instagram",
+          title: title || "Instagram Reel",
+          downloadUrl: videoUrl,
+          thumbnailUrl: thumbUrl,
+          filename: `instagram_${shortcode}.mp4`,
+          items: [
+            {
+              quality: "1080p",
+              label: "HD Video (MP4)",
+              url: videoUrl,
+              format: "mp4",
+            },
+          ],
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("[Instagram Embed Extractor failed]:", err);
+  }
+
+  // Strategy 2: Instagram GraphQL Query
+  try {
+    const graphqlUrl = `https://www.instagram.com/graphql/query/?doc_id=10015551848574243&variables=${encodeURIComponent(
+      JSON.stringify({ shortcode })
+    )}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+    const res = await fetch(graphqlUrl, {
+      headers: {
+        "User-Agent": USER_AGENTS[0],
+        "X-IG-App-ID": "936619743392459",
+        Accept: "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Sec-Fetch-Site": "same-origin",
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const json = await res.json();
+      const media = json?.data?.xdt_shortcode_media;
+      if (media && media.is_video && media.video_url) {
+        return {
+          success: true,
+          platform: "instagram",
+          title: media.edge_media_to_caption?.edges?.[0]?.node?.text || "Instagram Reel",
+          author: media.owner?.username,
+          downloadUrl: media.video_url,
+          thumbnailUrl: media.display_url,
+          filename: `instagram_${shortcode}.mp4`,
+          items: [
+            {
+              quality: "1080p",
+              label: "HD Video (MP4)",
+              url: media.video_url,
+              format: "mp4",
+            },
+          ],
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("[Instagram GraphQL Extractor failed]:", err);
+  }
+
+  return null;
+}
+
 /**
  * Direct Facebook video extraction from public page markup
  */
@@ -41,7 +171,6 @@ async function extractFacebookDirect(targetUrl: string): Promise<ReelApiResponse
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    // Fetch initial page with redirect following
     const res = await fetch(targetUrl, {
       headers: {
         "User-Agent": USER_AGENTS[0],
@@ -61,7 +190,6 @@ async function extractFacebookDirect(targetUrl: string): Promise<ReelApiResponse
     if (!res.ok) return null;
     const html = await res.text();
 
-    // Look for HD and SD video stream patterns in Facebook JS payloads
     const hdMatch =
       html.match(/"playable_url_quality_hd":"([^"]+)"/) ||
       html.match(/"browser_native_hd_url":"([^"]+)"/) ||
@@ -74,7 +202,6 @@ async function extractFacebookDirect(targetUrl: string): Promise<ReelApiResponse
       html.match(/sd_src:"([^"]+)"/) ||
       html.match(/sd_src_no_ratelimit:"([^"]+)"/);
 
-    // Also look for og:video meta tags
     const ogVideoMatch =
       html.match(/<meta\s+(?:property|name)="og:video(?::secure_url)?"\s+content="([^"]+)"/i) ||
       html.match(/<meta\s+content="([^"]+)"\s+(?:property|name)="og:video(?::secure_url)?"/i);
@@ -307,6 +434,13 @@ export async function POST(req: Request) {
     }
 
     // 1. Try Platform-Specific Direct Extractors First
+    if (platform === "instagram") {
+      const igRes = await extractInstagramDirect(cleanUrl);
+      if (igRes && igRes.downloadUrl) {
+        return NextResponse.json(igRes);
+      }
+    }
+
     if (platform === "tiktok") {
       const tiktokRes = await extractTikTokDirect(cleanUrl);
       if (tiktokRes && tiktokRes.downloadUrl) {
@@ -330,11 +464,19 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Fallback direct Facebook check if cobalt didn't catch it
-    if ((!cobaltData || cobaltData.status === "error") && platform === "facebook") {
-      const fbFallback = await extractFacebookDirect(cleanUrl);
-      if (fbFallback && fbFallback.downloadUrl) {
-        return NextResponse.json(fbFallback);
+    // 3. Fallback direct platform checks if Cobalt didn't catch it
+    if (!cobaltData || cobaltData.status === "error") {
+      if (platform === "instagram") {
+        const igFallback = await extractInstagramDirect(cleanUrl);
+        if (igFallback && igFallback.downloadUrl) {
+          return NextResponse.json(igFallback);
+        }
+      }
+      if (platform === "facebook") {
+        const fbFallback = await extractFacebookDirect(cleanUrl);
+        if (fbFallback && fbFallback.downloadUrl) {
+          return NextResponse.json(fbFallback);
+        }
       }
     }
 
