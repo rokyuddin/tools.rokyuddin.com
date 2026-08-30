@@ -49,6 +49,13 @@ import {
 } from "../src/features/utm-builder/utils/utm-generator.ts";
 import { validateUtmParams } from "../src/features/utm-builder/utils/utm-validator.ts";
 
+// 7. Reels Downloader
+import {
+  detectPlatformFromUrl,
+  sanitizeVideoUrl,
+  isValidSocialUrl,
+} from "../src/features/reels-downloader/utils/url-detector.ts";
+
 console.log("🚀 Running OmniTools Unit Tests...\n");
 
 let passed = 0;
@@ -319,5 +326,80 @@ test("Auto-fix UTM parameters", () => {
   assert.equal(fixed.campaign, "summer_sale");
 });
 
+// 9. Reels Downloader Tests
+console.log("\n=== Universal Reels Downloader ===");
+test("Detect Instagram Reel URL", () => {
+  assert.equal(
+    detectPlatformFromUrl("https://www.instagram.com/reel/C3_sample123/"),
+    "instagram"
+  );
+  assert.equal(
+    detectPlatformFromUrl("https://instagr.am/p/sample/"),
+    "instagram"
+  );
+});
+
+test("Detect TikTok video and short link", () => {
+  assert.equal(
+    detectPlatformFromUrl("https://www.tiktok.com/@creator/video/1234567890"),
+    "tiktok"
+  );
+  assert.equal(
+    detectPlatformFromUrl("https://vt.tiktok.com/ZS2xyz/"),
+    "tiktok"
+  );
+});
+
+test("Detect Facebook Reel and fb.watch link", () => {
+  assert.equal(
+    detectPlatformFromUrl("https://www.facebook.com/reel/1234567890"),
+    "facebook"
+  );
+  assert.equal(
+    detectPlatformFromUrl("https://fb.watch/xyz123/"),
+    "facebook"
+  );
+});
+
+test("Detect YouTube Shorts and youtu.be link", () => {
+  assert.equal(
+    detectPlatformFromUrl("https://youtube.com/shorts/sample123abc"),
+    "youtube"
+  );
+  assert.equal(
+    detectPlatformFromUrl("https://youtu.be/xyz123"),
+    "youtube"
+  );
+});
+
+test("Detect X / Twitter post link", () => {
+  assert.equal(
+    detectPlatformFromUrl("https://x.com/user/status/1234567890"),
+    "twitter"
+  );
+  assert.equal(
+    detectPlatformFromUrl("https://twitter.com/user/status/1234567890"),
+    "twitter"
+  );
+});
+
+test("Sanitize video URLs with whitespace and missing protocols", () => {
+  assert.equal(
+    sanitizeVideoUrl("  instagram.com/reel/123  "),
+    "https://instagram.com/reel/123"
+  );
+  assert.equal(
+    sanitizeVideoUrl('"https://vt.tiktok.com/ZS123/"'),
+    "https://vt.tiktok.com/ZS123/"
+  );
+});
+
+test("Validate social URLs", () => {
+  assert.equal(isValidSocialUrl("https://www.instagram.com/reel/123/"), true);
+  assert.equal(isValidSocialUrl("https://google.com/search?q=test"), false);
+  assert.equal(isValidSocialUrl("not-a-url"), false);
+});
+
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);
 if (passed !== total) process.exit(1);
+

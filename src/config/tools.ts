@@ -29,6 +29,70 @@ export interface ToolDefinition {
 
 export const toolsRegistry: ToolDefinition[] = [
   {
+    slug: "reels-downloader",
+    name: "Universal Reels & Video Downloader",
+    tagline: "Download Instagram Reels, TikTok without watermark, Facebook Reels, YouTube Shorts & X videos",
+    description: "Download high quality MP4 videos and MP3 audio from Instagram, TikTok (no watermark), Facebook, YouTube Shorts, and X (Twitter) directly to your device with zero ads.",
+    category: "General",
+    popular: true,
+    isNew: true,
+    badges: ["No Watermark", "HD MP4", "All Platforms", "100% Free"],
+    keywords: [
+      "reels downloader",
+      "instagram reels downloader",
+      "tiktok video download no watermark",
+      "facebook reel saver",
+      "youtube shorts downloader",
+      "x video download",
+      "twitter video downloader",
+      "online reel saver",
+    ],
+    features: [
+      "All-in-one multi-platform support: Instagram, TikTok, Facebook, YouTube Shorts, and X (Twitter)",
+      "TikTok downloads without any watermarks or logos",
+      "Original HD quality MP4 video stream extraction",
+      "In-browser video preview player with poster image and metadata",
+      "One-click direct MP4 video and MP3 audio downloads",
+      "Clean, ad-free experience without popups, redirects, or mandatory logins",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Copy Video Link",
+        description: "Copy the link of any Reel or Short video from Instagram, TikTok, Facebook, YouTube, or X.",
+      },
+      {
+        step: 2,
+        title: "Paste URL",
+        description: "Paste the URL into the input box above or click the Paste button.",
+      },
+      {
+        step: 3,
+        title: "Download Video",
+        description: "Preview the video and click 'Download HD Video (MP4)' to save it directly to your phone or computer.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Does this downloader remove TikTok watermarks?",
+        answer: "Yes! TikTok videos are downloaded in clean HD MP4 format without the TikTok watermark logo or username overlay.",
+      },
+      {
+        question: "Can I download videos on iPhone (iOS) and Android?",
+        answer: "Yes! On Android, the video saves directly to your Downloads folder. On iPhone/iOS Safari, click download, open in new tab, and tap the Share icon to 'Save Video' to your Photos.",
+      },
+      {
+        question: "Do I need to install any app or create an account?",
+        answer: "No. Everything runs seamlessly in your web browser with zero app installation, zero extensions, and no accounts required.",
+      },
+      {
+        question: "Is this video downloader free?",
+        answer: "Yes, it is 100% free with unlimited downloads and no subscription fees.",
+      },
+    ],
+    relatedToolSlugs: ["social-resizer", "image-compressor", "text-cleaner"],
+  },
+  {
     slug: "whatsapp-link",
     name: "WhatsApp Link Generator",
     tagline: "Generate direct WhatsApp click-to-chat links with custom pre-filled messages",

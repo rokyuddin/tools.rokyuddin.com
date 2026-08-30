@@ -10,6 +10,7 @@
 
 | Tool | Route | Description |
 |---|---|---|
+| **Universal Reels Downloader** | [`/tools/reels-downloader`](https://tools.rokyuddin.com/tools/reels-downloader) | Download Instagram Reels, TikTok (no watermark), Facebook Reels, YouTube Shorts, and X (Twitter) videos in HD quality with zero ads. |
 | **WhatsApp Link Generator** | [`/tools/whatsapp-link`](https://tools.rokyuddin.com/tools/whatsapp-link) | Generate instant WhatsApp click-to-chat links with country codes, custom pre-filled messages, high-res QR codes, and HTML embed buttons. |
 | **BDT Amount to Words** | [`/tools/bdt-to-words`](https://tools.rokyuddin.com/tools/bdt-to-words) | Convert numeric Bangladeshi Taka (BDT ৳) amounts into written English and formal Bangla (বাংলা) words for bank cheques, tax invoices, and legal deeds. Supports Bengali numerals (`১২৫৫০০`) and decimal paisa. |
 | **Image Compressor** | [`/tools/image-compressor`](https://tools.rokyuddin.com/tools/image-compressor) | Compress JPG, PNG, and WebP images up to 80% smaller directly inside your browser. Features live side-by-side comparison and batch downloads. |
