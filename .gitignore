@@ -45,3 +45,6 @@ next-env.d.ts
 .zcode/
 .trae/
 
+# binaries
+/bin/
+

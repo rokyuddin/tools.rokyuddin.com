@@ -54,6 +54,7 @@ import {
   detectPlatformFromUrl,
   sanitizeVideoUrl,
   isValidSocialUrl,
+  cleanEscapedUrl,
 } from "../src/features/reels-downloader/utils/url-detector.ts";
 
 // 8. Photo Blur & Redaction
@@ -404,6 +405,16 @@ test("Validate social URLs", () => {
   assert.equal(isValidSocialUrl("https://www.instagram.com/reel/123/"), true);
   assert.equal(isValidSocialUrl("https://google.com/search?q=test"), false);
   assert.equal(isValidSocialUrl("not-a-url"), false);
+});
+
+test("Clean escaped JSON/HTML video URLs with backslashes and unicode", () => {
+  const escaped =
+    "https:\\/\\/instagram.fdac31-1.fna.fbcdn.net\\/o1\\/v\\/t2\\/video.mp4?efg=abc\\%3D&amp;tag=1";
+  const cleaned = cleanEscapedUrl(escaped);
+  assert.equal(
+    cleaned,
+    "https://instagram.fdac31-1.fna.fbcdn.net/o1/v/t2/video.mp4?efg=abc%3D&tag=1"
+  );
 });
 
 // 10. Photo Blur & Privacy Redaction Tests

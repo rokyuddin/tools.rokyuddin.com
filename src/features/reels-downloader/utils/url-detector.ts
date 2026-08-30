@@ -134,3 +134,39 @@ export function isValidSocialUrl(url: string): boolean {
     return false;
   }
 }
+
+/**
+ * Decodes JSON escaped backslashes, Unicode escapes, and HTML entities from raw video URLs.
+ */
+export function cleanEscapedUrl(raw: string): string {
+  if (!raw || typeof raw !== "string") return "";
+  let clean = raw.trim();
+
+  // Remove surrounding quotes if any
+  clean = clean.replace(/^["']|["']$/g, "");
+
+  // 1. Unescape JSON unicode code points (e.g. \u0026 -> &, \u0025 -> %, \u002F -> /)
+  clean = clean.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
+    String.fromCharCode(parseInt(hex, 16))
+  );
+
+  // 2. Unescape escaped forward slashes (e.g. \/ -> /, \\/ -> /, \\\/ -> /)
+  clean = clean.replace(/\\+(\/)/g, "$1");
+
+  // 3. Unescape double escaped percentage (e.g. \%3D -> %3D, \\% -> %)
+  clean = clean.replace(/\\+%/g, "%");
+
+  // 4. Remove any remaining stray backslashes
+  clean = clean.replace(/\\+/g, "");
+
+  // 5. Unescape HTML entities (e.g. &amp; -> &)
+  clean = clean
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  return clean.trim();
+}
+

@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
-    "test": "node --experimental-strip-types scripts/run-tests.mjs"
+    "test": "node --experimental-strip-types scripts/run-tests.mjs",
+    "postinstall": "node scripts/ensure-ytdlp.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -22,7 +23,9 @@
     "react-dom": "19.2.8",
     "shadcn": "^4.19.0",
     "tailwind-merge": "^3.6.0",
-    "tw-animate-css": "^1.4.0"
+    "tw-animate-css": "^1.4.0",
+    "youtube-dl-exec": "^3.1.13",
+    "youtubei.js": "^18.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.2",

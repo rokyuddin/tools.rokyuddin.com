@@ -3,10 +3,11 @@ import {
   detectPlatformFromUrl,
   isValidSocialUrl,
   sanitizeVideoUrl,
+  cleanEscapedUrl,
 } from "@/features/reels-downloader/utils/url-detector";
+import { extractWithYtDlp } from "@/features/reels-downloader/utils/ytdlp-runner";
 import type { ReelApiResponse, VideoDownloadItem } from "@/features/reels-downloader/types";
 
-// Public Cobalt API instances for reliable fallback
 const COBALT_INSTANCES = [
   process.env.COBALT_API_URL,
   "https://api.cobalt.tools",
@@ -14,6 +15,7 @@ const COBALT_INSTANCES = [
   "https://co.wuk.sh",
   "https://cobalt-api.kellr.dev",
   "https://cobalt.xy24.eu",
+  "https://cobalt.synced.cloud",
 ].filter(Boolean) as string[];
 
 const USER_AGENTS = [
@@ -22,20 +24,245 @@ const USER_AGENTS = [
   "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
 ];
 
-function cleanEscapedUrl(raw: string): string {
-  return raw
-    .replace(/\\u0025/g, "%")
-    .replace(/\\u0026/g, "&")
-    .replace(/\\u002F/g, "/")
-    .replace(/\\u003D/g, "=")
-    .replace(/\\u003F/g, "?")
-    .replace(/\\\//g, "/")
-    .replace(/&amp;/g, "&");
-}
-
 function extractInstagramShortcode(url: string): string | null {
   const match = url.match(/(?:reel|p|reels)\/([A-Za-z0-9_-]+)/i);
   return match ? match[1] : null;
+}
+
+function extractYouTubeVideoId(url: string): string | null {
+  const shortsMatch = url.match(/shorts\/([A-Za-z0-9_-]+)/i);
+  if (shortsMatch) return shortsMatch[1];
+
+  const watchMatch = url.match(/[?&]v=([A-Za-z0-9_-]+)/i);
+  if (watchMatch) return watchMatch[1];
+
+  const shareMatch = url.match(/youtu\.be\/([A-Za-z0-9_-]+)/i);
+  if (shareMatch) return shareMatch[1];
+
+  return null;
+}
+
+/**
+ * Direct YouTube Shorts & Video extraction
+ */
+async function extractYouTubeDirect(targetUrl: string): Promise<ReelApiResponse | null> {
+  const videoId = extractYouTubeVideoId(targetUrl);
+  if (!videoId) return null;
+
+  const canonicalUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+  // Strategy 1: YouTube Official Android/iOS Client Innertube Player API
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+    const innertubeRes = await fetch("https://www.youtube.com/youtubei/v1/player", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
+        "X-YouTube-Client-Name": "3",
+        "X-YouTube-Client-Version": "19.09.37",
+      },
+      body: JSON.stringify({
+        context: {
+          client: {
+            clientName: "ANDROID",
+            clientVersion: "19.09.37",
+            androidSdkVersion: 30,
+            hl: "en",
+            gl: "US",
+          },
+        },
+        videoId,
+        playbackContext: {
+          contentPlaybackContext: {
+            html5Preference: "HTML5_PREF_WANTS",
+          },
+        },
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (innertubeRes.ok) {
+      const playerJson = await innertubeRes.json();
+      const streamingData = playerJson.streamingData;
+      const videoDetails = playerJson.videoDetails;
+
+      if (streamingData) {
+        const formats = streamingData.formats || [];
+        const adaptiveFormats = streamingData.adaptiveFormats || [];
+
+        // Look for direct progressive MP4 stream with audio (e.g. 720p or 360p)
+        const progressiveStream = formats.find(
+          (f: { url?: string; mimeType?: string }) => f.url && f.mimeType?.includes("video/mp4")
+        ) || formats.find((f: { url?: string }) => f.url);
+
+        if (progressiveStream && progressiveStream.url) {
+          const cleanStreamUrl = cleanEscapedUrl(progressiveStream.url);
+          const items: VideoDownloadItem[] = formats
+            .filter((f: { url?: string }) => f.url)
+            .map((f: { qualityLabel?: string; quality?: string; url: string }) => ({
+              quality: (f.qualityLabel?.includes("1080") ? "1080p" : f.qualityLabel?.includes("720") ? "720p" : "default") as VideoDownloadItem["quality"],
+              label: `HD Video (${f.qualityLabel || f.quality || "MP4"})`,
+              url: cleanEscapedUrl(f.url),
+              format: "mp4",
+            }));
+
+          // Add audio stream if available
+          const audioFormat = adaptiveFormats.find(
+            (f: { url?: string; mimeType?: string }) => f.url && f.mimeType?.includes("audio")
+          );
+          if (audioFormat && audioFormat.url) {
+            items.push({
+              quality: "audio",
+              label: "Audio Only (MP3/M4A)",
+              url: cleanEscapedUrl(audioFormat.url),
+              format: "mp3",
+            });
+          }
+
+          const thumb =
+            videoDetails?.thumbnail?.thumbnails?.pop()?.url ||
+            `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+          return {
+            success: true,
+            platform: "youtube",
+            title: videoDetails?.title || "YouTube Shorts",
+            author: videoDetails?.author,
+            downloadUrl: cleanStreamUrl,
+            thumbnailUrl: thumb,
+            filename: `youtube_${videoId}.mp4`,
+            items: items.length > 0 ? items : undefined,
+          };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[YouTube Innertube failed]:", err);
+  }
+
+  // Strategy 2: High-speed Piped / Invidious stream gateways
+  const apiGateways = [
+    `https://pipedapi.kavin.rocks/streams/${videoId}`,
+    `https://api.piped.privacydev.net/streams/${videoId}`,
+    `https://pipedapi.tokhmi.xyz/streams/${videoId}`,
+    `https://inv.nadeko.net/api/v1/videos/${videoId}`,
+    `https://invidious.nerdvpn.de/api/v1/videos/${videoId}`,
+    `https://yewtu.be/api/v1/videos/${videoId}`,
+  ];
+
+  for (const endpoint of apiGateways) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const res = await fetch(endpoint, {
+        headers: {
+          "User-Agent": USER_AGENTS[0],
+          Accept: "application/json",
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const json = await res.json();
+
+        // Check piped format
+        if (json.videoStreams && Array.isArray(json.videoStreams) && json.videoStreams.length > 0) {
+          const videoStreams = json.videoStreams.filter(
+            (s: { format?: string; videoOnly?: boolean }) => s.format === "MPEG_4" || s.videoOnly === false
+          );
+          const bestStream = videoStreams[0] || json.videoStreams[0];
+
+          if (bestStream && bestStream.url) {
+            const items: VideoDownloadItem[] = json.videoStreams
+              .slice(0, 3)
+              .map((s: { quality?: string; url: string }) => ({
+                quality: (s.quality?.includes("1080") ? "1080p" : s.quality?.includes("720") ? "720p" : "default") as VideoDownloadItem["quality"],
+                label: `HD Video (${s.quality || "MP4"})`,
+                url: cleanEscapedUrl(s.url),
+                format: "mp4",
+              }));
+
+            return {
+              success: true,
+              platform: "youtube",
+              title: json.title || "YouTube Shorts",
+              author: json.uploader,
+              downloadUrl: cleanEscapedUrl(bestStream.url),
+              thumbnailUrl: json.thumbnailUrl || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+              filename: `youtube_${videoId}.mp4`,
+              items: items.length > 0 ? items : undefined,
+            };
+          }
+        }
+
+        // Check invidious format
+        if (json.formatStreams && Array.isArray(json.formatStreams) && json.formatStreams.length > 0) {
+          const mp4Stream =
+            json.formatStreams.find((s: { container?: string; resolution?: string }) => s.container === "mp4" && s.resolution === "720p") ||
+            json.formatStreams.find((s: { container?: string }) => s.container === "mp4") ||
+            json.formatStreams[0];
+
+          if (mp4Stream && mp4Stream.url) {
+            const items: VideoDownloadItem[] = json.formatStreams.map(
+              (s: { resolution?: string; qualityLabel?: string; url: string }) => ({
+                quality: (s.resolution?.includes("1080") ? "1080p" : s.resolution?.includes("720") ? "720p" : "default") as VideoDownloadItem["quality"],
+                label: `HD Video (${s.qualityLabel || s.resolution || "MP4"})`,
+                url: cleanEscapedUrl(s.url),
+                format: "mp4",
+              })
+            );
+
+            return {
+              success: true,
+              platform: "youtube",
+              title: json.title || "YouTube Shorts",
+              author: json.author,
+              downloadUrl: cleanEscapedUrl(mp4Stream.url),
+              thumbnailUrl: json.videoThumbnails?.[0]?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+              filename: `youtube_${videoId}.mp4`,
+              items: items.length > 0 ? items : undefined,
+            };
+          }
+        }
+      }
+    } catch {
+      // Continue to next gateway
+    }
+  }
+
+  // Strategy 3: Cobalt fallback with canonical watch URL
+  for (const instance of COBALT_INSTANCES) {
+    const cobaltRes = await fetchFromCobaltInstance(instance, canonicalUrl);
+    if (cobaltRes?.url) {
+      const cleanUrl = cleanEscapedUrl(cobaltRes.url);
+      return {
+        success: true,
+        platform: "youtube",
+        title: cobaltRes.text || "YouTube Shorts",
+        downloadUrl: cleanUrl,
+        thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        filename: cobaltRes.filename || `youtube_${videoId}.mp4`,
+        items: [
+          {
+            quality: "1080p",
+            label: "HD Video (MP4)",
+            url: cleanUrl,
+            format: "mp4",
+          },
+        ],
+      };
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -137,19 +364,22 @@ async function extractInstagramDirect(targetUrl: string): Promise<ReelApiRespons
       const json = await res.json();
       const media = json?.data?.xdt_shortcode_media;
       if (media && media.is_video && media.video_url) {
+        const videoUrl = cleanEscapedUrl(media.video_url);
+        const thumbUrl = media.display_url ? cleanEscapedUrl(media.display_url) : undefined;
+
         return {
           success: true,
           platform: "instagram",
           title: media.edge_media_to_caption?.edges?.[0]?.node?.text || "Instagram Reel",
           author: media.owner?.username,
-          downloadUrl: media.video_url,
-          thumbnailUrl: media.display_url,
+          downloadUrl: videoUrl,
+          thumbnailUrl: thumbUrl,
           filename: `instagram_${shortcode}.mp4`,
           items: [
             {
               quality: "1080p",
               label: "HD Video (MP4)",
-              url: media.video_url,
+              url: videoUrl,
               format: "mp4",
             },
           ],
@@ -311,21 +541,28 @@ async function extractTikTokDirect(targetUrl: string): Promise<ReelApiResponse |
 
     if (json.code === 0 && json.data) {
       const videoData = json.data;
-      const downloadUrl = videoData.hdplay || videoData.play;
+      const rawDownloadUrl = videoData.hdplay || videoData.play;
+      const downloadUrl = rawDownloadUrl.startsWith("http")
+        ? rawDownloadUrl
+        : `https://www.tikwm.com${rawDownloadUrl}`;
+
       const items: VideoDownloadItem[] = [
         {
           quality: "1080p",
           label: "HD Video (No Watermark)",
-          url: downloadUrl.startsWith("http") ? downloadUrl : `https://www.tikwm.com${downloadUrl}`,
+          url: cleanEscapedUrl(downloadUrl),
           format: "mp4",
         },
       ];
 
       if (videoData.music) {
+        const musicUrl = videoData.music.startsWith("http")
+          ? videoData.music
+          : `https://www.tikwm.com${videoData.music}`;
         items.push({
           quality: "audio",
           label: "Audio Only (MP3)",
-          url: videoData.music.startsWith("http") ? videoData.music : `https://www.tikwm.com${videoData.music}`,
+          url: cleanEscapedUrl(musicUrl),
           format: "mp3",
         });
       }
@@ -336,7 +573,7 @@ async function extractTikTokDirect(targetUrl: string): Promise<ReelApiResponse |
         title: videoData.title || "TikTok Video",
         author: videoData.author?.nickname || videoData.author?.unique_id,
         downloadUrl: items[0].url,
-        thumbnailUrl: videoData.cover,
+        thumbnailUrl: videoData.cover ? cleanEscapedUrl(videoData.cover) : undefined,
         filename: `tiktok_${videoData.id || "reel"}.mp4`,
         items,
       };
@@ -375,14 +612,20 @@ async function fetchFromCobaltInstance(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "User-Agent": "OmniTools-VideoDownloader/1.0",
+  };
+
+  if (process.env.COBALT_API_KEY) {
+    headers["Authorization"] = `Api-Key ${process.env.COBALT_API_KEY}`;
+  }
+
   try {
     const res = await fetch(endpoint.endsWith("/") ? endpoint : `${endpoint}/`, {
       method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "User-Agent": "OmniTools-VideoDownloader/1.0",
-      },
+      headers,
       body: JSON.stringify({
         url: targetUrl,
         videoQuality: "1080",
@@ -433,7 +676,20 @@ export async function POST(req: Request) {
       );
     }
 
+    // 0. Try local yt-dlp engine first (highest reliability across all video sources)
+    const ytdlpRes = await extractWithYtDlp(cleanUrl, platform);
+    if (ytdlpRes && ytdlpRes.downloadUrl) {
+      return NextResponse.json(ytdlpRes);
+    }
+
     // 1. Try Platform-Specific Direct Extractors First
+    if (platform === "youtube") {
+      const ytRes = await extractYouTubeDirect(cleanUrl);
+      if (ytRes && ytRes.downloadUrl) {
+        return NextResponse.json(ytRes);
+      }
+    }
+
     if (platform === "instagram") {
       const igRes = await extractInstagramDirect(cleanUrl);
       if (igRes && igRes.downloadUrl) {
@@ -466,6 +722,12 @@ export async function POST(req: Request) {
 
     // 3. Fallback direct platform checks if Cobalt didn't catch it
     if (!cobaltData || cobaltData.status === "error") {
+      if (platform === "youtube") {
+        const ytFallback = await extractYouTubeDirect(cleanUrl);
+        if (ytFallback && ytFallback.downloadUrl) {
+          return NextResponse.json(ytFallback);
+        }
+      }
       if (platform === "instagram") {
         const igFallback = await extractInstagramDirect(cleanUrl);
         if (igFallback && igFallback.downloadUrl) {
@@ -498,7 +760,7 @@ export async function POST(req: Request) {
       const items: VideoDownloadItem[] = cobaltData.picker.map((item, idx) => ({
         quality: "default",
         label: `Media #${idx + 1} (${item.type === "photo" ? "Photo" : "Video"})`,
-        url: item.url,
+        url: cleanEscapedUrl(item.url),
         format: item.type === "photo" ? "mp4" : "mp4",
       }));
 
@@ -506,8 +768,8 @@ export async function POST(req: Request) {
         success: true,
         platform,
         title: `${platform.toUpperCase()} Media Carousel (${cobaltData.picker.length} items)`,
-        downloadUrl: firstItem.url,
-        thumbnailUrl: firstItem.thumb,
+        downloadUrl: cleanEscapedUrl(firstItem.url),
+        thumbnailUrl: firstItem.thumb ? cleanEscapedUrl(firstItem.thumb) : undefined,
         filename: cobaltData.filename || `${platform}_reel.mp4`,
         items,
       } satisfies ReelApiResponse);
@@ -516,12 +778,13 @@ export async function POST(req: Request) {
     // Handle single direct video/tunnel response
     if (cobaltData.url) {
       const filename = cobaltData.filename || `${platform}_video.mp4`;
+      const cleanDownloadUrl = cleanEscapedUrl(cobaltData.url);
 
       const items: VideoDownloadItem[] = [
         {
           quality: "1080p",
           label: "HD Video (MP4 - No Watermark)",
-          url: cobaltData.url,
+          url: cleanDownloadUrl,
           format: "mp4",
         },
       ];
@@ -530,7 +793,7 @@ export async function POST(req: Request) {
         success: true,
         platform,
         title: cobaltData.text || `${platform.charAt(0).toUpperCase() + platform.slice(1)} Reel`,
-        downloadUrl: cobaltData.url,
+        downloadUrl: cleanDownloadUrl,
         filename,
         items,
       } satisfies ReelApiResponse);

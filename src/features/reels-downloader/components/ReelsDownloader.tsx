@@ -306,7 +306,7 @@ export function ReelsDownloader() {
           <div className="overflow-hidden rounded-2xl border border-border bg-black/5 dark:bg-black/40 flex items-center justify-center aspect-video max-h-[320px] w-full">
             {result.downloadUrl ? (
               <video
-                src={result.downloadUrl}
+                src={`/api/proxy-download?url=${encodeURIComponent(result.downloadUrl)}&inline=1`}
                 poster={result.thumbnailUrl}
                 controls
                 playsInline
@@ -359,29 +359,32 @@ export function ReelsDownloader() {
                     Select Quality / Format
                   </div>
 
-                  {downloadOptions.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() =>
-                        handleDirectDownload(
-                          opt.url,
-                          result.filename || `video_${opt.quality}.${opt.format}`
-                        )
-                      }
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        {opt.format === "mp3" ? (
-                          <Music className="size-4 text-primary shrink-0" />
-                        ) : (
-                          <Film className="size-4 text-primary shrink-0" />
-                        )}
-                        <span>{opt.label}</span>
-                      </div>
-                      <Download className="size-3.5 opacity-60 shrink-0" />
-                    </button>
-                  ))}
+                  {downloadOptions.map((opt, idx) => {
+                    const targetExt = opt.format === "mp3" ? "mp3" : "mp4";
+                    const baseName = result.filename
+                      ? result.filename.replace(/\.[^.]+$/, "")
+                      : `${result.platform}_video`;
+                    const cleanFilename = `${baseName}_${opt.quality}.${targetExt}`;
+
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleDirectDownload(opt.url, cleanFilename)}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          {opt.format === "mp3" ? (
+                            <Music className="size-4 text-primary shrink-0" />
+                          ) : (
+                            <Film className="size-4 text-primary shrink-0" />
+                          )}
+                          <span>{opt.label}</span>
+                        </div>
+                        <Download className="size-3.5 opacity-60 shrink-0" />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -389,7 +392,7 @@ export function ReelsDownloader() {
             {/* Open in New Tab Button */}
             {result.downloadUrl && (
               <a
-                href={result.downloadUrl}
+                href={`/api/proxy-download?url=${encodeURIComponent(result.downloadUrl)}&inline=1`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
