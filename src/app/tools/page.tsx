@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 const categories: Array<"All" | ToolCategory> = [
   "All",
   "Images",
+  "Developer",
+  "General",
   "Business",
   "Bangladesh",
 ];
