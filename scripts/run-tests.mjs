@@ -2,8 +2,15 @@ import assert from "node:assert/strict";
 import { parseBanglaOrEnglishNumber } from "../src/features/bdt-to-words/utils/parser.ts";
 import { convertNumberToWordsEn } from "../src/features/bdt-to-words/utils/number-to-words-en.ts";
 import { convertNumberToWordsBn } from "../src/features/bdt-to-words/utils/number-to-words-bn.ts";
-import { generateWhatsAppUrl, sanitizePhoneNumber } from "../src/features/whatsapp-link/utils/generate-url.ts";
-import { rgbToHex, rgbToHsl, buildColorInfo } from "../src/features/color-extractor/utils/color-math.ts";
+import {
+  generateWhatsAppUrl,
+  sanitizePhoneNumber,
+} from "../src/features/whatsapp-link/utils/generate-url.ts";
+import {
+  rgbToHex,
+  rgbToHsl,
+  buildColorInfo,
+} from "../src/features/color-extractor/utils/color-math.ts";
 
 // 1. Photo Print Size Checker
 import {
@@ -104,21 +111,21 @@ test("Parse Bengali numerals (১২৫৫০০)", () => {
 test("English conversion (125500)", () => {
   assert.equal(
     convertNumberToWordsEn(125500, 0),
-    "One lakh twenty-five thousand five hundred taka only."
+    "One lakh twenty-five thousand five hundred taka only.",
   );
 });
 
 test("English conversion with crore (12345678)", () => {
   assert.equal(
     convertNumberToWordsEn(12345678, 0),
-    "One crore twenty-three lakh forty-five thousand six hundred seventy-eight taka only."
+    "One crore twenty-three lakh forty-five thousand six hundred seventy-eight taka only.",
   );
 });
 
 test("Bangla conversion (125500)", () => {
   assert.equal(
     convertNumberToWordsBn(125500, 0),
-    "এক লাখ পঁচিশ হাজার পাঁচ শত টাকা মাত্র।"
+    "এক লাখ পঁচিশ হাজার পাঁচ শত টাকা মাত্র।",
   );
 });
 
@@ -129,12 +136,18 @@ test("Sanitize phone numbers with spaces and dashes", () => {
 });
 
 test("Generate clean wa.me URL", () => {
-  const url = generateWhatsAppUrl({ dialCode: "880", phoneNumber: "1712345678" });
+  const url = generateWhatsAppUrl({
+    dialCode: "880",
+    phoneNumber: "1712345678",
+  });
   assert.equal(url, "https://wa.me/8801712345678");
 });
 
 test("Strip leading zero from national number", () => {
-  const url = generateWhatsAppUrl({ dialCode: "880", phoneNumber: "01712345678" });
+  const url = generateWhatsAppUrl({
+    dialCode: "880",
+    phoneNumber: "01712345678",
+  });
   assert.equal(url, "https://wa.me/8801712345678");
 });
 
@@ -266,13 +279,14 @@ test("Clean extra spaces and blank lines", () => {
 test("Normalize smart curly quotes and invisible chars", () => {
   const raw = "“Hello” ‘World’\u200B";
   const { cleanedText, metrics } = cleanText(raw, DEFAULT_CLEANER_OPTIONS);
-  assert.equal(cleanedText, '"Hello" \'World\'');
+  assert.equal(cleanedText, "\"Hello\" 'World'");
   assert.equal(metrics.quotesNormalized, 4);
   assert.equal(metrics.invisibleCharsRemoved, 1);
 });
 
 test("Specialized Email Cleaner with deduplication", () => {
-  const raw = "John <john@example.com>\nJOHN@EXAMPLE.COM\n  info@test.com  \njohn@example.com";
+  const raw =
+    "John <john@example.com>\nJOHN@EXAMPLE.COM\n  info@test.com  \njohn@example.com";
   const { cleanedText, count, duplicates } = cleanEmailList(raw);
   assert.equal(count, 2);
   assert.equal(duplicates, 2);
@@ -300,7 +314,7 @@ test("Generate valid UTM URL", () => {
   });
   assert.equal(
     url,
-    "https://example.com/shop?utm_source=facebook&utm_medium=paid_social&utm_campaign=summer_sale_2026&utm_content=hero_banner"
+    "https://example.com/shop?utm_source=facebook&utm_medium=paid_social&utm_campaign=summer_sale_2026&utm_content=hero_banner",
   );
 });
 
@@ -338,66 +352,60 @@ console.log("\n=== Universal Reels Downloader ===");
 test("Detect Instagram Reel URL", () => {
   assert.equal(
     detectPlatformFromUrl("https://www.instagram.com/reel/C3_sample123/"),
-    "instagram"
+    "instagram",
   );
   assert.equal(
     detectPlatformFromUrl("https://instagr.am/p/sample/"),
-    "instagram"
+    "instagram",
   );
 });
 
 test("Detect TikTok video and short link", () => {
   assert.equal(
     detectPlatformFromUrl("https://www.tiktok.com/@creator/video/1234567890"),
-    "tiktok"
+    "tiktok",
   );
   assert.equal(
     detectPlatformFromUrl("https://vt.tiktok.com/ZS2xyz/"),
-    "tiktok"
+    "tiktok",
   );
 });
 
 test("Detect Facebook Reel and fb.watch link", () => {
   assert.equal(
     detectPlatformFromUrl("https://www.facebook.com/reel/1234567890"),
-    "facebook"
+    "facebook",
   );
-  assert.equal(
-    detectPlatformFromUrl("https://fb.watch/xyz123/"),
-    "facebook"
-  );
+  assert.equal(detectPlatformFromUrl("https://fb.watch/xyz123/"), "facebook");
 });
 
 test("Detect YouTube Shorts and youtu.be link", () => {
   assert.equal(
     detectPlatformFromUrl("https://youtube.com/shorts/sample123abc"),
-    "youtube"
+    "youtube",
   );
-  assert.equal(
-    detectPlatformFromUrl("https://youtu.be/xyz123"),
-    "youtube"
-  );
+  assert.equal(detectPlatformFromUrl("https://youtu.be/xyz123"), "youtube");
 });
 
 test("Detect X / Twitter post link", () => {
   assert.equal(
     detectPlatformFromUrl("https://x.com/user/status/1234567890"),
-    "twitter"
+    "twitter",
   );
   assert.equal(
     detectPlatformFromUrl("https://twitter.com/user/status/1234567890"),
-    "twitter"
+    "twitter",
   );
 });
 
 test("Sanitize video URLs with whitespace and missing protocols", () => {
   assert.equal(
     sanitizeVideoUrl("  instagram.com/reel/123  "),
-    "https://instagram.com/reel/123"
+    "https://instagram.com/reel/123",
   );
   assert.equal(
     sanitizeVideoUrl('"https://vt.tiktok.com/ZS123/"'),
-    "https://vt.tiktok.com/ZS123/"
+    "https://vt.tiktok.com/ZS123/",
   );
 });
 
@@ -413,7 +421,7 @@ test("Clean escaped JSON/HTML video URLs with backslashes and unicode", () => {
   const cleaned = cleanEscapedUrl(escaped);
   assert.equal(
     cleaned,
-    "https://instagram.fdac31-1.fna.fbcdn.net/o1/v/t2/video.mp4?efg=abc%3D&tag=1"
+    "https://instagram.fdac31-1.fna.fbcdn.net/o1/v/t2/video.mp4?efg=abc%3D&tag=1",
   );
 });
 
@@ -431,7 +439,7 @@ test("Clamp rectangle exceeding canvas bounds", () => {
   const clamped = clampRectToBounds(
     { x: 900, y: 550, width: 200, height: 100 },
     1000,
-    600
+    600,
   );
   assert.equal(clamped.x, 900);
   assert.equal(clamped.y, 550);
@@ -439,6 +447,83 @@ test("Clamp rectangle exceeding canvas bounds", () => {
   assert.equal(clamped.height, 50);
 });
 
+// 11. Bangla Date & Season Converter Tests
+import {
+  gregorianToBangla,
+  banglaToGregorian,
+  toBanglaNumber,
+  fromBanglaNumber,
+  isGregorianLeapYear,
+} from "../src/features/bangla-date-converter/utils/bangla-calendar.ts";
+
+console.log("\n=== Bangla Date & Season Converter ===");
+test("Bengali digit conversions", () => {
+  assert.equal(toBanglaNumber(1433), "১৪৩৩");
+  assert.equal(toBanglaNumber("01712"), "০১৭১২");
+  assert.equal(fromBanglaNumber("১৪৩৩"), "1433");
+});
+
+test("Pohela Boishakh (April 14, 2026 -> 1 Boishakh 1433)", () => {
+  const res = gregorianToBangla("2026-04-14");
+  assert.equal(res.day, 1);
+  assert.equal(res.monthNameBn, "বৈশাখ");
+  assert.equal(res.year, 1433);
+  assert.equal(res.season.nameBn, "গ্রীষ্ম");
+  assert.equal(res.dayBn, "১");
+});
+
+test("Pohela Boishakh eve (April 13, 2026 -> 30 Choitro 1432)", () => {
+  const res = gregorianToBangla("2026-04-13");
+  assert.equal(res.day, 30);
+  assert.equal(res.monthNameBn, "চৈত্র");
+  assert.equal(res.year, 1432);
+  assert.equal(res.season.nameBn, "বসন্ত");
+});
+
+test("Ekushey February (Feb 21, 2026 -> 8 Falgun 1432)", () => {
+  const res = gregorianToBangla("2026-02-21");
+  assert.equal(res.day, 8);
+  assert.equal(res.monthNameBn, "ফাল্গুন");
+  assert.equal(res.year, 1432);
+  assert.equal(res.season.nameBn, "বসন্ত");
+});
+
+test("Independence Day (March 26, 2026 -> 12 Choitro 1432)", () => {
+  const res = gregorianToBangla("2026-03-26");
+  assert.equal(res.day, 12);
+  assert.equal(res.monthNameBn, "চৈত্র");
+  assert.equal(res.year, 1432);
+});
+
+test("Victory Day (Dec 16, 2026 -> 1 Poush 1433)", () => {
+  const res = gregorianToBangla("2026-12-16");
+  assert.equal(res.day, 1);
+  assert.equal(res.monthNameBn, "পৌষ");
+  assert.equal(res.year, 1433);
+  assert.equal(res.season.nameBn, "শীত");
+});
+
+test("Leap year leap day (Feb 29, 2024 -> 16 Falgun 1430)", () => {
+  assert.equal(isGregorianLeapYear(2024), true);
+  const res = gregorianToBangla("2024-02-29");
+  assert.equal(res.day, 16);
+  assert.equal(res.monthNameBn, "ফাল্গুন");
+  assert.equal(res.year, 1430);
+});
+
+test("Reverse Bangla to Gregorian (1 Boishakh 1433 -> April 14, 2026)", () => {
+  const gDate = banglaToGregorian(1433, 0, 1);
+  assert.equal(gDate.getFullYear(), 2026);
+  assert.equal(gDate.getMonth(), 3); // April
+  assert.equal(gDate.getDate(), 14);
+});
+
+test("Reverse Bangla to Gregorian (8 Falgun 1432 -> Feb 21, 2026)", () => {
+  const gDate = banglaToGregorian(1432, 10, 8);
+  assert.equal(gDate.getFullYear(), 2026);
+  assert.equal(gDate.getMonth(), 1); // February
+  assert.equal(gDate.getDate(), 21);
+});
+
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);
 if (passed !== total) process.exit(1);
-
