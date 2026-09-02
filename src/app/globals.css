@@ -49,16 +49,25 @@
 }
 
 :root {
-  --font-sans: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Nunito Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans:
+    "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --font-heading:
+    "Nunito Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  --font-geist-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.5 0.134 242.749);
-  --primary-foreground: oklch(0.977 0.013 236.62);
+
+  --primary: oklch(0.546 0.245 277);
+  --primary-foreground: oklch(0.985 0.01 277);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.97 0 0);
@@ -68,13 +77,16 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.546 0.245 277 / 0.5);
+
   --chart-1: oklch(0.828 0.111 230.318);
   --chart-2: oklch(0.685 0.169 237.323);
   --chart-3: oklch(0.588 0.158 241.966);
   --chart-4: oklch(0.5 0.134 242.749);
   --chart-5: oklch(0.443 0.11 240.79);
-  --radius: 0.625rem;
+
+  --radius: 0.875rem;
+
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.588 0.158 241.966);
@@ -83,40 +95,64 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Brand gradient — the logo's blue -> indigo -> violet ramp, now in tokens */
+  --brand-1: oklch(0.62 0.21 255);
+  --brand-2: oklch(0.546 0.245 277);
+  --brand-3: oklch(0.58 0.25 300);
+
+  /* Per-category duotone ramps (from -> to). Source of truth for tool identity. */
+  --ramp-images-from: oklch(0.75 0.18 200);
+  --ramp-images-to: oklch(0.62 0.22 255);
+  --ramp-developer-from: oklch(0.55 0.25 277);
+  --ramp-developer-to: oklch(0.6 0.25 300);
+  --ramp-business-from: oklch(0.7 0.14 195);
+  --ramp-business-to: oklch(0.7 0.18 160);
+  --ramp-bangladesh-from: oklch(0.7 0.19 145);
+  --ramp-bangladesh-to: oklch(0.78 0.16 75);
+  --ramp-documents-from: oklch(0.72 0.17 55);
+  --ramp-documents-to: oklch(0.65 0.22 25);
+  --ramp-general-from: oklch(0.6 0.02 250);
+  --ramp-general-to: oklch(0.72 0.15 230);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.443 0.11 240.79);
-  --primary-foreground: oklch(0.977 0.013 236.62);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.17 0.015 258);
+  --foreground: oklch(0.985 0.005 258);
+  --card: oklch(0.215 0.015 258);
+  --card-foreground: oklch(0.985 0.005 258);
+  --popover: oklch(0.215 0.015 258);
+  --popover-foreground: oklch(0.985 0.005 258);
+  --primary: oklch(0.62 0.22 277);
+  --primary-foreground: oklch(0.985 0.01 277);
+  --secondary: oklch(0.274 0.01 258);
+  --secondary-foreground: oklch(0.985 0.005 258);
+  --muted: oklch(0.269 0.01 258);
+  --muted-foreground: oklch(0.708 0.01 258);
+  --accent: oklch(0.269 0.01 258);
+  --accent-foreground: oklch(0.985 0.005 258);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.62 0.22 277 / 0.5);
   --chart-1: oklch(0.828 0.111 230.318);
   --chart-2: oklch(0.685 0.169 237.323);
   --chart-3: oklch(0.588 0.158 241.966);
   --chart-4: oklch(0.5 0.134 242.749);
   --chart-5: oklch(0.443 0.11 240.79);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.205 0.015 258);
+  --sidebar-foreground: oklch(0.985 0.005 258);
   --sidebar-primary: oklch(0.685 0.169 237.323);
   --sidebar-primary-foreground: oklch(0.293 0.066 243.157);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0.01 258);
+  --sidebar-accent-foreground: oklch(0.985 0.005 258);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.556 0.01 258);
+
+  /* Brand ramps brighten slightly on dark for glow readability */
+  --brand-1: oklch(0.68 0.2 255);
+  --brand-2: oklch(0.6 0.24 277);
+  --brand-3: oklch(0.64 0.24 300);
 }
 
 @layer base {
@@ -126,10 +162,212 @@
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* Brand text gradient (blue -> indigo -> violet) */
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      135deg,
+      var(--brand-1),
+      var(--brand-2),
+      var(--brand-3)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Brand surface gradient */
+  .bg-brand-gradient {
+    background-image: linear-gradient(
+      135deg,
+      var(--brand-1),
+      var(--brand-2),
+      var(--brand-3)
+    );
+  }
+
+  /* Per-category gradient helpers: .bg-ramp-images, .text-ramp-developer, etc. */
+  .bg-ramp-images {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-images-from),
+      var(--ramp-images-to)
+    );
+  }
+  .bg-ramp-developer {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-developer-from),
+      var(--ramp-developer-to)
+    );
+  }
+  .bg-ramp-business {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-business-from),
+      var(--ramp-business-to)
+    );
+  }
+  .bg-ramp-bangladesh {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-bangladesh-from),
+      var(--ramp-bangladesh-to)
+    );
+  }
+  .bg-ramp-documents {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-documents-from),
+      var(--ramp-documents-to)
+    );
+  }
+  .bg-ramp-general {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-general-from),
+      var(--ramp-general-to)
+    );
+  }
+
+  .text-ramp-images {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-images-from),
+      var(--ramp-images-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .text-ramp-developer {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-developer-from),
+      var(--ramp-developer-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .text-ramp-business {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-business-from),
+      var(--ramp-business-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .text-ramp-bangladesh {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-bangladesh-from),
+      var(--ramp-bangladesh-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .text-ramp-documents {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-documents-from),
+      var(--ramp-documents-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .text-ramp-general {
+    background-image: linear-gradient(
+      135deg,
+      var(--ramp-general-from),
+      var(--ramp-general-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Aurora mesh — soft brand-tinted glow behind content. Place on a relative container. */
+  .aurora {
+    position: relative;
+    isolation: isolate;
+  }
+  .aurora::before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    z-index: -1;
+    background:
+      radial-gradient(
+        closest-side,
+        color-mix(in oklch, var(--brand-1) 55%, transparent),
+        transparent 75%
+      ),
+      radial-gradient(
+        closest-side,
+        color-mix(in oklch, var(--brand-2) 50%, transparent),
+        transparent 75%
+      ),
+      radial-gradient(
+        closest-side,
+        color-mix(in oklch, var(--brand-3) 45%, transparent),
+        transparent 75%
+      );
+    background-position:
+      15% 15%,
+      85% 25%,
+      50% 90%;
+    background-repeat: no-repeat;
+    filter: blur(70px);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .dark .aurora::before {
+    opacity: 0.45;
+  }
+
+  /* Fine grain noise overlay — kills banding on gradients. Place on a relative container. */
+  .grain {
+    position: relative;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Gradient hairline (brand) for header/footer borders */
+  .border-brand-hairline {
+    border-image: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in oklch, var(--brand-2) 60%, transparent),
+        transparent
+      )
+      1;
   }
 }

@@ -16,6 +16,7 @@ const categories: Array<"All" | ToolCategory> = [
   "General",
   "Business",
   "Bangladesh",
+  "Documents",
 ];
 
 export default function ToolsDirectoryPage() {

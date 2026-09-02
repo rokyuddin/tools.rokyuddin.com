@@ -3,7 +3,8 @@ export type ToolCategory =
   | "Business"
   | "Bangladesh"
   | "Developer"
-  | "General";
+  | "General"
+  | "Documents";
 
 export interface ToolFaq {
   question: string;
@@ -1121,6 +1122,78 @@ export const toolsRegistry: ToolDefinition[] = [
       },
     ],
     relatedToolSlugs: ["whatsapp-link", "text-cleaner", "social-resizer"],
+  },
+  {
+    slug: "pdf-reader",
+    name: "PDF Book Reader",
+    tagline:
+      "Read PDF files in a clean, book-like paginated reader with light, sepia & dark themes",
+    description:
+      "Upload any PDF document and read it in a beautiful paginated reader with two-page spread on desktop, dark and sepia reading modes, and keyboard navigation. 100% in-browser — your PDF never leaves your device.",
+    category: "Documents",
+    isNew: true,
+    badges: [
+      "100% In-Browser",
+      "Paginated Reader",
+      "Dark & Sepia",
+      "Keyboard Shortcuts",
+    ],
+    keywords: [
+      "pdf reader online",
+      "pdf viewer",
+      "read pdf online",
+      "pdf book reader",
+      "online pdf viewer",
+      "pdf document reader",
+      "browser pdf reader",
+    ],
+    features: [
+      "Paginated reader with two-page spread on desktop, single page on mobile",
+      "Three reading themes: Light (cream), Sepia (parchment), and Dark (soft black)",
+      "Zoom controls: Fit Width, Fit Page, and custom zoom levels",
+      "Keyboard shortcuts: Arrow keys to navigate, +/- to zoom, F for fullscreen",
+      "Fullscreen immersive reading mode",
+      "Session-only page memory — remembers where you left off in the current browser session",
+      "100% client-side — your PDF files are processed entirely in your browser and never uploaded to any server",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Drop or Browse PDF",
+        description:
+          "Drag and drop your PDF file or click to browse and select from your device.",
+      },
+      {
+        step: 2,
+        title: "Read & Navigate",
+        description:
+          "Use arrow keys, click zones, or toolbar buttons to flip pages. Switch themes and zoom as needed.",
+      },
+      {
+        step: 3,
+        title: "Fullscreen & Focus",
+        description:
+          "Press F for fullscreen immersive reading. Your position is remembered if you accidentally close the tab.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Are my PDF files uploaded to your server?",
+        answer:
+          "No! All PDF rendering happens 100% locally in your browser using Mozilla's pdf.js library. Your documents never leave your device.",
+      },
+      {
+        question: "Can I read large PDF books with hundreds of pages?",
+        answer:
+          "Yes! Pages are rendered on demand as you navigate, so even large PDFs with hundreds of pages load quickly and efficiently.",
+      },
+      {
+        question: "Does it remember where I stopped reading?",
+        answer:
+          "Yes, within your current browser session. If you accidentally close the tab and reopen it, you'll resume from the same page. This data is cleared when you close your browser.",
+      },
+    ],
+    relatedToolSlugs: ["text-cleaner", "batch-file-renamer", "favicon-tester"],
   },
 ];
 

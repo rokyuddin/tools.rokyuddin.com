@@ -22,6 +22,7 @@ const categories: Array<"All" | ToolCategory> = [
   "General",
   "Business",
   "Bangladesh",
+  "Documents",
 ];
 
 export default function HomePage() {
@@ -55,7 +56,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground">
             Simple, fast tools for{" "}
-            <span className="bg-gradient-to-r from-primary to-sky-600 bg-clip-text text-transparent">
+            <span className="text-gradient-brand">
               everyday work.
             </span>
           </h1>

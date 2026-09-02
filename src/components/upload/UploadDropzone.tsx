@@ -1,7 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { UploadCloud, Image as ImageIcon, AlertCircle, Sparkles } from "lucide-react";
+import {
+  AlertCircle,
+  Image as ImageIcon,
+  Sparkles,
+  UploadCloud,
+} from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -56,7 +62,7 @@ export function UploadDropzone({
             (t) =>
               t === fileType ||
               t === fileExtension ||
-              (t.endsWith("/*") && fileType.startsWith(t.slice(0, -2)))
+              (t.endsWith("/*") && fileType.startsWith(t.slice(0, -2))),
           );
 
         if (!isTypeMatch) {
@@ -80,7 +86,7 @@ export function UploadDropzone({
         }
       }
     },
-    [accept, maxSizeMB, multiple, onFilesSelected]
+    [accept, maxSizeMB, multiple, onFilesSelected],
   );
 
   // Global paste handler when enabled
@@ -129,16 +135,25 @@ export function UploadDropzone({
 
   return (
     <div className={cn("w-full flex flex-col gap-2", className)}>
+      {/* biome-ignore lint/a11y/useSemanticElements: dropzone contains nested interactive <Button> controls and cannot be a single <button> */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        role="button"
+        tabIndex={0}
         className={cn(
           "relative flex flex-col items-center justify-center p-8 md:p-12 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center",
           isDragging
             ? "border-primary bg-primary/5 scale-[1.005]"
-            : "border-border hover:border-primary/50 hover:bg-muted/30 bg-card"
+            : "border-border hover:border-primary/50 hover:bg-muted/30 bg-card",
         )}
       >
         <input
@@ -155,7 +170,7 @@ export function UploadDropzone({
           className="hidden"
         />
 
-        <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4 ring-8 ring-primary/5">
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-brand-gradient text-white mb-4 shadow-lg shadow-primary/20 ring-8 ring-primary/5">
           <UploadCloud className="size-7" />
         </div>
 
@@ -168,13 +183,20 @@ export function UploadDropzone({
         </p>
 
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-          <Button type="button" size="sm" variant="default" className="pointer-events-none">
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            className="pointer-events-none"
+          >
             <ImageIcon className="size-4 mr-1.5" />
             Browse Files
           </Button>
           {enableClipboardPaste && (
             <span className="hidden sm:inline-flex items-center text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-md border border-border">
-              or press <kbd className="font-mono font-semibold mx-1">Ctrl+V</kbd> to paste
+              or press{" "}
+              <kbd className="font-mono font-semibold mx-1">Ctrl+V</kbd> to
+              paste
             </span>
           )}
           {sampleAction && (

@@ -6,7 +6,7 @@ import { toolsRegistry } from "@/config/tools";
 import { Logo } from "./Logo";
 
 export function Footer() {
-  const categories = ["Images", "Business", "Bangladesh"] as const;
+  const categories = ["Images", "Business", "Bangladesh", "Documents"] as const;
 
   return (
     <footer className="mt-auto border-t border-border bg-card text-card-foreground">
