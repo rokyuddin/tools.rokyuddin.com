@@ -32,7 +32,6 @@ export const QUICK_PRESETS: {
   { label: "1 MB", amount: 1, unit: "MB" },
   { label: "2 MB", amount: 2, unit: "MB" },
   { label: "5 MB", amount: 5, unit: "MB" },
-  { label: "10 MB", amount: 10, unit: "MB" },
 ];
 
 export function TargetSizeModal({
@@ -42,30 +41,38 @@ export function TargetSizeModal({
   fileSizeBytes,
   onConfirm,
 }: TargetSizeModalProps) {
-  // Default recommendation: 1 MB if small, or round up to next whole MB
   const defaultTargetMB = Math.max(1, Math.ceil(fileSizeBytes / BYTES_PER_MB));
   const [amount, setAmount] = useState<string>(defaultTargetMB.toString());
   const [unit, setUnit] = useState<SizeUnit>("MB");
   const [error, setError] = useState<string | null>(null);
 
+  const modalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input whenever modal opens
+  // Focus input & setup Escape key listener
   useEffect(() => {
-    if (isOpen) {
-      setError(null);
-      // Auto-compute sensible default
-      if (fileSizeBytes < 500 * BYTES_PER_KB) {
-        setAmount("1");
-        setUnit("MB");
-      } else {
-        const nextMB = Math.ceil((fileSizeBytes * 1.5) / BYTES_PER_MB);
-        setAmount(nextMB.toString());
-        setUnit("MB");
-      }
-      setTimeout(() => inputRef.current?.select(), 50);
+    if (!isOpen) return;
+
+    setError(null);
+    if (fileSizeBytes < 500 * BYTES_PER_KB) {
+      setAmount("1");
+      setUnit("MB");
+    } else {
+      const nextMB = Math.ceil((fileSizeBytes * 1.5) / BYTES_PER_MB);
+      setAmount(nextMB.toString());
+      setUnit("MB");
     }
-  }, [isOpen, fileSizeBytes]);
+    setTimeout(() => inputRef.current?.select(), 50);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, fileSizeBytes, onClose]);
 
   if (!isOpen) return null;
 
@@ -95,7 +102,10 @@ export function TargetSizeModal({
       aria-modal="true"
       aria-labelledby="target-size-modal-title"
     >
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl transition-all">
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl transition-all"
+      >
         {/* Close Button */}
         <button
           type="button"
@@ -164,7 +174,7 @@ export function TargetSizeModal({
               htmlFor="target-amount"
               className="text-xs font-medium text-muted-foreground block mb-1.5"
             >
-              Exact Desired Size
+              Exact Target File Size
             </label>
             <div className="flex gap-2">
               <Input
