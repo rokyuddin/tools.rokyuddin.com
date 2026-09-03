@@ -70,6 +70,18 @@ import {
   clampRectToBounds,
 } from "../src/features/photo-blur/utils/canvas-redactor.ts";
 
+// 9. File Size Increaser / Pad Engine
+import {
+  parseUnitToBytes,
+  validateTargetSize,
+  calculatePaddingBytes,
+  formatFileSize,
+  generatePaddedFileName,
+  generatePaddedBlob,
+  BYTES_PER_KB,
+  BYTES_PER_MB,
+} from "../src/features/file-size-increaser/lib/pad-engine.ts";
+
 console.log("🚀 Running OmniTools Unit Tests...\n");
 
 let passed = 0;
@@ -523,6 +535,78 @@ test("Reverse Bangla to Gregorian (8 Falgun 1432 -> Feb 21, 2026)", () => {
   assert.equal(gDate.getFullYear(), 2026);
   assert.equal(gDate.getMonth(), 1); // February
   assert.equal(gDate.getDate(), 21);
+});
+
+// 9. File Size Increaser / Pad Engine tests
+console.log("=== File Size Increaser (Pad Engine) ===");
+
+test("parseUnitToBytes correctly converts KB and MB", () => {
+  assert.equal(parseUnitToBytes(10, "KB"), 10 * BYTES_PER_KB);
+  assert.equal(parseUnitToBytes(1, "MB"), BYTES_PER_MB);
+  assert.equal(parseUnitToBytes(2.5, "MB"), Math.round(2.5 * BYTES_PER_MB));
+  assert.equal(parseUnitToBytes(-5, "MB"), 0);
+  assert.equal(parseUnitToBytes(NaN, "KB"), 0);
+});
+
+test("calculatePaddingBytes computes accurate delta", () => {
+  const original = 10 * BYTES_PER_KB; // 10,240
+  const target = 1 * BYTES_PER_MB; // 1,048,576
+  const padding = calculatePaddingBytes(original, target);
+  assert.equal(padding, target - original);
+  assert.equal(calculatePaddingBytes(100, 50), 0); // target smaller than current
+});
+
+test("validateTargetSize checks constraints and boundaries", () => {
+  const current = 15 * BYTES_PER_KB; // 15 KB
+  // Smaller than current
+  const tooSmall = validateTargetSize(current, 10 * BYTES_PER_KB);
+  assert.equal(tooSmall.isValid, false);
+  assert.match(tooSmall.error, /must be larger than current file size/i);
+
+  // Equal to current
+  const equalSize = validateTargetSize(current, current);
+  assert.equal(equalSize.isValid, false);
+
+  // Over 100 MB safe limit
+  const tooLarge = validateTargetSize(current, 101 * BYTES_PER_MB);
+  assert.equal(tooLarge.isValid, false);
+  assert.match(tooLarge.error, /safe maximum limit/i);
+
+  // Valid target
+  const valid = validateTargetSize(current, 1 * BYTES_PER_MB);
+  assert.equal(valid.isValid, true);
+  assert.equal(valid.error, undefined);
+});
+
+test("formatFileSize formats bytes cleanly", () => {
+  assert.equal(formatFileSize(512), "512 B");
+  assert.equal(formatFileSize(1024), "1 KB");
+  assert.equal(formatFileSize(1536), "1.50 KB");
+  assert.equal(formatFileSize(1048576), "1 MB");
+  assert.equal(formatFileSize(2097152), "2 MB");
+});
+
+test("generatePaddedFileName formats downloadable filename", () => {
+  assert.equal(
+    generatePaddedFileName("avatar.png", 1048576),
+    "avatar-1MB.png",
+  );
+  assert.equal(
+    generatePaddedFileName("my-passport-doc.pdf", 512000),
+    "my-passport-doc-500KB.pdf",
+  );
+  assert.equal(
+    generatePaddedFileName("archive.tar.gz", 2097152),
+    "archive.tar-2MB.gz",
+  );
+});
+
+test("generatePaddedBlob produces exact target size", () => {
+  const originalBytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]); // 8 bytes
+  const targetBytes = 1024; // 1 KB
+  const blob = generatePaddedBlob(originalBytes, targetBytes, "image/png");
+  assert.equal(blob.size, targetBytes);
+  assert.equal(blob.type, "image/png");
 });
 
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);

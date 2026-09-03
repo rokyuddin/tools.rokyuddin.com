@@ -35,6 +35,83 @@ export interface ToolDefinition {
 
 export const toolsRegistry: ToolDefinition[] = [
   {
+    slug: "file-size-increaser",
+    name: "File Size Increaser & Image Padder",
+    tagline:
+      "Increase image and file size to any exact target size online for free",
+    description:
+      "Easily inflate images and files to meet minimum file size upload requirements (e.g. visa portals, job applications, or university submissions). 100% private in-browser safe padding with byte accuracy.",
+    category: "Images",
+    popular: true,
+    isNew: true,
+    badges: [
+      "Exact Byte Size",
+      "Any File Format",
+      "100% In-Browser",
+      "Zero Quality Loss",
+    ],
+    keywords: [
+      "increase image size",
+      "make file size bigger",
+      "image padder",
+      "increase file size online",
+      "pad file with bytes",
+      "inflate photo size",
+      "make 10kb image 1mb",
+    ],
+    features: [
+      "Exact target size matching down to the single byte in KB or MB",
+      "Safe binary null-padding preserving 100% original visual fidelity without lossy re-encoding",
+      "Supports all file formats: JPG, PNG, WebP, PDF, Word documents, text, archives, and binaries",
+      "Smart first-upload modal with one-click popular presets (100KB, 500KB, 1MB, 2MB, 5MB, 10MB)",
+      "Interactive workbench with live inline size adjustments without reopening popups",
+      "100% private client-side processing: files never leave your device or touch any server",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Upload File or Image",
+        description:
+          "Drag & drop any image or file, browse from your computer, or paste directly from clipboard.",
+      },
+      {
+        step: 2,
+        title: "Choose Target Size",
+        description:
+          "In the instant popup, select a popular preset (like 1 MB) or type your exact desired size.",
+      },
+      {
+        step: 3,
+        title: "Download Padded File",
+        description:
+          "Adjust inline if needed and click Download to immediately save your byte-accurate file.",
+      },
+    ],
+    faqs: [
+      {
+        question: "How does the File Size Increaser make files bigger?",
+        answer:
+          "It safely appends trailing null padding bytes to the file until the target byte count is met. This guarantees exact size matching without altering original image pixels, audio, or document text.",
+      },
+      {
+        question: "Does increasing image size reduce its visual quality?",
+        answer:
+          "No! Because it uses binary padding rather than lossy re-compression or pixel stretching, your original image looks 100% identical to the source.",
+      },
+      {
+        question: "Are my files uploaded to your server?",
+        answer:
+          "Never. All padding calculations and Blob generations are performed entirely within your web browser using HTML5 Web APIs. No data is transferred to any external server.",
+      },
+      {
+        question: "Can I increase PDF or Word document sizes too?",
+        answer:
+          "Yes! This tool works on any file format, including PDF, DOCX, XLSX, TXT, ZIP, and all image types.",
+      },
+    ],
+    relatedToolSlugs: ["image-compressor", "photo-print-size-checker", "image-to-webp"],
+  },
+  {
     slug: "blur-image",
     name: "Photo Blur & Privacy Redaction Tool",
     tagline:
