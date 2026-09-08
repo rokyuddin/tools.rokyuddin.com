@@ -24,7 +24,7 @@ export const CROP_ASPECTS: CropAspect[] = [
   { id: "9:16", label: "Story (9:16)", ratio: 9 / 16 },
 ];
 
-function ModalShell({
+export function ModalShell({
   title,
   onClose,
   children,
