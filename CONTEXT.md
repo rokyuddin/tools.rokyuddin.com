@@ -29,3 +29,29 @@ _Avoid_: File threshold, memory cap
 **Target Unit**:
 The digital information measurement unit (`KB` or `MB`) chosen by the user to express the Target File Size.
 _Avoid_: Scale, size magnitude
+
+### Image Resizer
+
+**Original Dimensions**:
+The pixel width × height read from the source image before any change.
+_Avoid_: Original size, source resolution
+
+**Target Dimensions**:
+The pixel width × height requested by the user for the output image.
+_Avoid_: Output dimension, desired weight
+
+**Resize Mode**:
+How Target Dimensions are chosen: `By Size` (explicit width/height), `By Percentage` (scale of original), or `Social Preset` (platform dimensions).
+_Avoid_: Resize type, size mode
+
+**Aspect Ratio Lock**:
+When on, changing width auto-updates height (and vice versa) to preserve original proportions.
+_Avoid_: Lock ratio, proportion lock
+
+**Resized Image**:
+The resulting image rendered on canvas at Target Dimensions and encoded in the chosen Export Format.
+_Avoid_: Inflated image, converted image
+
+**Export Format**:
+The output encoding (`Original`, `JPG`, `PNG`, or `WebP`) chosen for the Resized Image.
+_Avoid_: Save as type, file type

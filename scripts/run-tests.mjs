@@ -82,6 +82,22 @@ import {
   BYTES_PER_MB,
 } from "../src/features/file-size-increaser/lib/pad-engine.ts";
 
+// 10. Image Resizer / Resize Engine
+import {
+  clampDimension,
+  resolveBySize,
+  resolveByPercentage,
+  SOCIAL_PRESETS,
+  resolveSocialPreset,
+  generateResizedFileName,
+  validateTargetFileSizeKB,
+  isUpscale,
+} from "../src/features/image-resizer/utils/resize-engine.ts";
+import {
+  resolveMimeType,
+  extensionForMime,
+} from "../src/features/image-resizer/utils/render-image.ts";
+
 console.log("🚀 Running OmniTools Unit Tests...\n");
 
 let passed = 0;
@@ -607,6 +623,98 @@ test("generatePaddedBlob produces exact target size", () => {
   const blob = generatePaddedBlob(originalBytes, targetBytes, "image/png");
   assert.equal(blob.size, targetBytes);
   assert.equal(blob.type, "image/png");
+});
+
+// 10. Image Resizer / Resize Engine tests
+console.log("=== Image Resizer (Resize Engine) ===");
+
+test("clampDimension enforces 1-12000 bounds", () => {
+  assert.equal(clampDimension(800), 800);
+  assert.equal(clampDimension(0), 1);
+  assert.equal(clampDimension(-50), 1);
+  assert.equal(clampDimension(20000), 12000);
+  assert.equal(clampDimension(NaN), 1);
+});
+
+test("resolveBySize with Aspect Ratio Lock derives missing axis", () => {
+  const fromWidth = resolveBySize(400, 200, 800, undefined, true);
+  assert.deepEqual(fromWidth, { width: 800, height: 400 });
+  const fromHeight = resolveBySize(400, 200, undefined, 100, true);
+  assert.deepEqual(fromHeight, { width: 200, height: 100 });
+});
+
+test("resolveBySize without lock uses explicit dims clamped", () => {
+  assert.deepEqual(resolveBySize(400, 200, 800, 600, false), {
+    width: 800,
+    height: 600,
+  });
+  assert.deepEqual(resolveBySize(400, 200, undefined, undefined, false), {
+    width: 400,
+    height: 200,
+  });
+});
+
+test("resolveByPercentage scales Original Dimensions", () => {
+  assert.deepEqual(resolveByPercentage(393, 844, 50), {
+    width: 197,
+    height: 422,
+  });
+  assert.deepEqual(resolveByPercentage(1000, 1000, 25), {
+    width: 250,
+    height: 250,
+  });
+});
+
+test("social presets resolve to documented pixels", () => {
+  assert.equal(SOCIAL_PRESETS.length, 6);
+  assert.deepEqual(resolveSocialPreset("instagram-square"), {
+    width: 1080,
+    height: 1080,
+  });
+  assert.deepEqual(resolveSocialPreset("youtube-thumbnail"), {
+    width: 1280,
+    height: 720,
+  });
+});
+
+test("generateResizedFileName formats name-WxH.ext", () => {
+  assert.equal(generateResizedFileName("photo.png", 800, 600), "photo-800x600.png");
+  assert.equal(generateResizedFileName("archive.tar.gz", 100, 100), "archive.tar-100x100.gz");
+  assert.equal(generateResizedFileName("noext", 10, 20), "noext-10x20");
+});
+
+test("validateTargetFileSizeKB enforces JPG/WebP-only 10-5000KB", () => {
+  assert.equal(validateTargetFileSizeKB(200, "image/jpeg").isValid, true);
+  assert.equal(validateTargetFileSizeKB(200, "image/webp").isValid, true);
+  assert.equal(validateTargetFileSizeKB(200, "image/png").isValid, false);
+  assert.equal(validateTargetFileSizeKB(5, "image/jpeg").isValid, false);
+  assert.equal(validateTargetFileSizeKB(6000, "image/jpeg").isValid, false);
+});
+
+test("isUpscale flags Target Dimensions larger than original", () => {
+  assert.equal(isUpscale(400, 200, 800, 400), true);
+  assert.equal(isUpscale(800, 600, 400, 300), false);
+  assert.equal(isUpscale(800, 600, 800, 600), false);
+});
+
+test("resolveBySize lock honors last-edited axis", () => {
+  assert.deepEqual(resolveBySize(400, 200, 800, 600, true, "height"), {
+    width: 1200,
+    height: 600,
+  });
+  assert.deepEqual(resolveBySize(400, 200, 800, 600, true), {
+    width: 800,
+    height: 400,
+  });
+});
+
+test("resolveMimeType maps Original GIF to PNG, extensionForMime matches", () => {
+  assert.equal(resolveMimeType("original", "image/gif"), "image/png");
+  assert.equal(resolveMimeType("original", "image/png"), "image/png");
+  assert.equal(resolveMimeType("original", "image/bmp"), "image/jpeg");
+  assert.equal(extensionForMime("image/png"), ".png");
+  assert.equal(extensionForMime("image/webp"), ".webp");
+  assert.equal(extensionForMime("image/jpeg"), ".jpg");
 });
 
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);

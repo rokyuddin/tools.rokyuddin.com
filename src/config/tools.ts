@@ -778,6 +778,61 @@ export const toolsRegistry: ToolDefinition[] = [
     ],
   },
   {
+    slug: "image-resizer",
+    name: "Image Resizer",
+    tagline: "Resize any image to exact pixels in your browser",
+    description:
+      "Free online image resizer with 100% in-browser processing. Resize by size, percentage, or social presets with format conversion and batch ZIP download.",
+    category: "Images",
+    popular: true,
+    isNew: true,
+    badges: ["100% In-Browser", "Batch Support", "Social Presets", "Privacy First"],
+    keywords: [
+      "image resizer",
+      "resize image online",
+      "resize jpg png",
+      "image dimension resizer",
+      "client side image resizer",
+    ],
+    features: [
+      "Resize by exact pixels, percentage, or 6 social presets",
+      "Aspect Ratio Lock, rotate, flip, and crop per image",
+      "Format conversion to JPG, PNG, or WebP with quality control",
+      "Optional target file size for JPG and WebP",
+      "Batch queue up to 10 images with ZIP download",
+      "100% client-side canvas processing, files never uploaded",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Upload Images",
+        description: "Drag and drop, browse, or paste images from clipboard.",
+      },
+      {
+        step: 2,
+        title: "Choose Dimensions",
+        description: "Pick By Size, As Percentage, or a Social preset.",
+      },
+      {
+        step: 3,
+        title: "Export Files",
+        description: "Download individually or all as a ZIP archive.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Are my photos uploaded to your server?",
+        answer:
+          "No. All resizing happens in your browser with canvas. Files never leave your device.",
+      },
+      {
+        question: "What formats are supported?",
+        answer: "JPG, PNG, WebP, AVIF, BMP, and static GIF input; JPG, PNG, or WebP output.",
+      },
+    ],
+    relatedToolSlugs: ["image-compressor", "image-to-webp", "social-resizer"],
+  },
+  {
     slug: "photo-print-size-checker",
     name: "Photo Print Size Checker",
     tagline:
