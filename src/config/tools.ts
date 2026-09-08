@@ -833,6 +833,68 @@ export const toolsRegistry: ToolDefinition[] = [
     relatedToolSlugs: ["image-compressor", "image-to-webp", "social-resizer"],
   },
   {
+    slug: "image-converter",
+    name: "Image Converter",
+    tagline: "Convert JPG, PNG, WebP, GIF, BMP & AVIF entirely in your browser",
+    description:
+      "Free online image converter with 100% in-browser processing. Convert between JPG, PNG, and WebP with per-file control over quality, resolution, background fill, and target file size.",
+    category: "Images",
+    popular: true,
+    isNew: true,
+    badges: ["100% In-Browser", "Batch Support", "Per-File Options", "Privacy First"],
+    keywords: [
+      "image converter",
+      "jpg to png",
+      "png to jpg",
+      "convert webp",
+      "image format converter",
+      "client side image converter",
+    ],
+    features: [
+      "Convert JPG, PNG, WebP, GIF, BMP, and AVIF to JPG, PNG, or WebP",
+      "Per-file output format picker with live conversion",
+      "Per-file Options: quality, custom resolution, background fill, target file size",
+      "EXIF metadata stripped automatically on export",
+      "Batch queue up to 10 images with ZIP download",
+      "100% client-side canvas processing, files never uploaded",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Upload Images",
+        description: "Drag and drop, browse, or paste images from clipboard.",
+      },
+      {
+        step: 2,
+        title: "Pick Format & Options",
+        description: "Choose the output format per file and fine-tune quality, resolution, or file size in Options.",
+      },
+      {
+        step: 3,
+        title: "Download Files",
+        description: "Download individually or all as a ZIP archive.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Are my photos uploaded to your server?",
+        answer:
+          "No. All conversion happens in your browser with canvas. Files never leave your device.",
+      },
+      {
+        question: "Which formats can I convert between?",
+        answer:
+          "Input: JPG, PNG, WebP, GIF (first frame), BMP, and AVIF. Output: JPG, PNG, or WebP — the formats browsers can encode. SVG and HEIC/HEIF are rejected with a clear message.",
+      },
+      {
+        question: "What happens to transparency when converting to JPG?",
+        answer:
+          "JPG has no transparency, so transparent areas are filled with your chosen background color (white by default) in the per-file Options panel.",
+      },
+    ],
+    relatedToolSlugs: ["image-to-webp", "image-compressor", "image-resizer"],
+  },
+  {
     slug: "photo-print-size-checker",
     name: "Photo Print Size Checker",
     tagline:

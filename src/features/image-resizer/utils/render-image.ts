@@ -20,6 +20,7 @@ export interface RenderOptions {
   crop?: CropRect;
   mimeType?: string;
   quality?: number;
+  background?: string;
 }
 
 export function loadImageFile(file: File): Promise<HTMLImageElement> {
@@ -65,6 +66,7 @@ export async function renderResizedBlob(
     crop = FULL_CROP,
     mimeType = "image/jpeg",
     quality = 0.9,
+    background = "#ffffff",
   } = options;
 
   const srcW = img.naturalWidth || img.width;
@@ -109,7 +111,7 @@ export async function renderResizedBlob(
   ctx.imageSmoothingQuality = "high";
 
   if (mimeType === "image/jpeg") {
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = background;
     ctx.fillRect(0, 0, out.width, out.height);
   }
 
@@ -184,4 +186,10 @@ export function extensionForMime(mimeType: string): string {
   if (mimeType === "image/png") return ".png";
   if (mimeType === "image/webp") return ".webp";
   return ".jpg";
+}
+
+export function convertedFileName(originalName: string, mimeType: string): string {
+  const lastDot = originalName.lastIndexOf(".");
+  const base = lastDot > 0 ? originalName.slice(0, lastDot) : originalName;
+  return `${base}${extensionForMime(mimeType)}`;
 }

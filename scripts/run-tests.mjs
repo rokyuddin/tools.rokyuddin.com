@@ -96,6 +96,7 @@ import {
 import {
   resolveMimeType,
   extensionForMime,
+  convertedFileName,
 } from "../src/features/image-resizer/utils/render-image.ts";
 
 console.log("🚀 Running OmniTools Unit Tests...\n");
@@ -715,6 +716,13 @@ test("resolveMimeType maps Original GIF to PNG, extensionForMime matches", () =>
   assert.equal(extensionForMime("image/png"), ".png");
   assert.equal(extensionForMime("image/webp"), ".webp");
   assert.equal(extensionForMime("image/jpeg"), ".jpg");
+});
+
+test("convertedFileName swaps extension for target mime", () => {
+  assert.equal(convertedFileName("photo.jpg", "image/png"), "photo.png");
+  assert.equal(convertedFileName("archive.tar.gz", "image/webp"), "archive.tar.webp");
+  assert.equal(convertedFileName("noext", "image/jpeg"), "noext.jpg");
+  assert.equal(convertedFileName("shot.PNG", "image/jpeg"), "shot.jpg");
 });
 
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);
