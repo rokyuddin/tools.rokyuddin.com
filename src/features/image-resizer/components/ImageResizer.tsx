@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UploadDropzone } from "@/components/upload/UploadDropzone";
+import { CropModal, RotateModal } from "./EditModals";
 import { formatBytes, triggerDownload } from "@/lib/utils";
 import {
   MAX_DIMENSION,
@@ -101,7 +102,8 @@ export function ImageResizer() {
   const [targetKB, setTargetKB] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedCrop, setExpandedCrop] = useState<string | null>(null);
+  const [cropModalId, setCropModalId] = useState<string | null>(null);
+  const [rotateModalId, setRotateModalId] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState<string | null>(null);
   const renderSeq = useRef(0);
 
@@ -552,15 +554,15 @@ export function ImageResizer() {
                 <CardContent className="p-4 pt-2 space-y-3">
                   <div className="relative w-full h-80 rounded-xl overflow-hidden bg-muted/40 border border-border flex items-center justify-center p-3">
                     <div className="absolute top-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-                      <Button type="button" variant="ghost" size="icon-sm" title="Crop" onClick={() => setExpandedCrop(expandedCrop === item.id ? null : item.id)} className="bg-background/90 border border-border h-7 w-7" data-active={expandedCrop === item.id}>
+                      <Button type="button" variant="ghost" size="icon-sm" title="Crop" onClick={() => setCropModalId(item.id)} className="bg-background/90 border border-border h-7 w-7">
                         <Crop className="size-3.5" />
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon-sm"
-                        title="Rotate 90°"
-                        onClick={() => updateTransform(item.id, { rotation: ((t.rotation + 90) % 360) as Rotation })}
+                        title="Rotate and flip"
+                        onClick={() => setRotateModalId(item.id)}
                         className="bg-background/90 border border-border h-7 w-7"
                       >
                         <RotateCw className="size-3.5" />
@@ -605,25 +607,6 @@ export function ImageResizer() {
                       {item.file.type || "unknown type"} · {formatBytes(item.file.size)} · {item.origW}×{item.origH}px
                     </p>
                   )}
-                  {expandedCrop === item.id && (
-                    <div className="grid grid-cols-4 gap-2 rounded-xl border border-border bg-muted/30 p-3">
-                      {(["x", "y", "w", "h"] as const).map((k) => (
-                        <Field key={k}>
-                          <FieldLabel className="text-[10px] uppercase">{k} %</FieldLabel>
-                          <Input
-                            inputSize="sm"
-                            value={Math.round(t.crop[k] * 100)}
-                            onChange={(e) => {
-                              const v = Math.min(100, Math.max(0, Number(e.target.value) || 0)) / 100;
-                              updateTransform(item.id, { crop: { ...t.crop, [k]: v } });
-                            }}
-                            inputMode="numeric"
-                          />
-                        </Field>
-                      ))}
-                      <button type="button" onClick={() => updateTransform(item.id, { crop: FULL_CROP })} className="col-span-4 text-[11px] font-medium text-primary hover:underline cursor-pointer">Reset crop</button>
-                    </div>
-                  )}
                   <Button
                     type="button"
                     variant="default"
@@ -642,6 +625,50 @@ export function ImageResizer() {
         </div>
       </div>
       </div>
+
+      {/* Crop modal */}
+      {cropModalId &&
+        (() => {
+          const item = items.find((i) => i.id === cropModalId);
+          if (!item) return null;
+          const t = transforms[item.id] ?? DEFAULT_TRANSFORM;
+          return (
+            <CropModal
+              src={item.img.src}
+              alt={item.file.name}
+              origW={item.origW}
+              origH={item.origH}
+              initial={t.crop}
+              onApply={(crop) => updateTransform(item.id, { crop })}
+              onClose={() => setCropModalId(null)}
+            />
+          );
+        })()}
+
+      {/* Rotate & flip modal */}
+      {rotateModalId &&
+        (() => {
+          const item = items.find((i) => i.id === rotateModalId);
+          if (!item) return null;
+          const t = transforms[item.id] ?? DEFAULT_TRANSFORM;
+          return (
+            <RotateModal
+              src={outputs[item.id]?.url ?? item.img.src}
+              alt={item.file.name}
+              rotation={t.rotation}
+              flipH={t.flipH}
+              flipV={t.flipV}
+              onRotate={(dir) =>
+                updateTransform(item.id, {
+                  rotation: (((t.rotation + (dir === 1 ? 90 : 270)) % 360) as Rotation),
+                })
+              }
+              onFlipH={() => updateTransform(item.id, { flipH: !t.flipH })}
+              onFlipV={() => updateTransform(item.id, { flipV: !t.flipV })}
+              onClose={() => setRotateModalId(null)}
+            />
+          );
+        })()}
     </div>
   );
 }
