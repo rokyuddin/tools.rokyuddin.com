@@ -1389,6 +1389,77 @@ export const toolsRegistry: ToolDefinition[] = [
     ],
     relatedToolSlugs: ["text-cleaner", "batch-file-renamer", "favicon-tester"],
   },
+  {
+    slug: "meme-generator",
+    name: "Meme Generator",
+    tagline:
+      "Create memes from popular templates with custom text and emoji overlays",
+    description:
+      "Pick a popular Meme Template or upload your own Base Image, add draggable Text Overlays and Icon Overlays, tune fonts and Canvas Padding, and export the Meme Output as PNG, JPG, or WebP. 100% private in-browser editing.",
+    category: "Images",
+    popular: true,
+    isNew: true,
+    badges: [
+      "Template Gallery",
+      "100% In-Browser",
+      "Emoji Overlays",
+      "PNG / JPG / WebP",
+    ],
+    keywords: [
+      "meme generator",
+      "meme maker online",
+      "custom meme maker",
+      "drake meme maker",
+      "distracted boyfriend meme",
+      "meme text adder",
+    ],
+    features: [
+      "Built-in Meme Template gallery with instant search",
+      "Draggable Text Overlays with Impact, Arial, Serif, and Mono fonts",
+      "Outline stroke, color, size, alignment, bold, and italic controls",
+      "Draggable Icon Overlays from a built-in emoji picker",
+      "Adjustable Canvas Padding bars with custom color",
+      "Export Format choice (PNG, JPG, WebP) with quality control and copy-to-clipboard",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Pick a Template or Upload",
+        description:
+          "Choose a Meme Template from the gallery, upload your own image, or paste from clipboard.",
+      },
+      {
+        step: 2,
+        title: "Add Text & Icons",
+        description:
+          "Drag Text Overlays into place, style fonts and outlines, and drop Icon Overlays anywhere.",
+      },
+      {
+        step: 3,
+        title: "Export Meme Output",
+        description:
+          "Pick PNG, JPG, or WebP and download at full resolution or copy straight to clipboard.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Are my uploaded images sent to a server?",
+        answer:
+          "No. Templates, uploads, and all compositing run 100% locally in your browser. Nothing ever leaves your device.",
+      },
+      {
+        question: "Can I use my own photo instead of a template?",
+        answer:
+          "Yes! Click Upload Meme, drop any JPG, PNG, WebP, GIF, or BMP file, or paste directly from clipboard. All editing tools work identically.",
+      },
+      {
+        question: "What resolution is the exported meme?",
+        answer:
+          "The Meme Output exports at the full Base Image resolution plus any Canvas Padding — the on-screen preview is only scaled down for display.",
+      },
+    ],
+    relatedToolSlugs: ["image-compressor", "social-resizer", "blur-image"],
+  },
 ];
 
 export function getToolBySlug(slug: string): ToolDefinition | undefined {

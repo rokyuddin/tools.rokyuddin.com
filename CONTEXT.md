@@ -55,3 +55,33 @@ _Avoid_: Inflated image, converted image
 **Export Format**:
 The output encoding (`Original`, `JPG`, `PNG`, or `WebP`) chosen for the Resized Image.
 _Avoid_: Save as type, file type
+
+### Meme Generator
+
+**Meme Template**:
+A pre-loaded background image from the built-in gallery that the user picks as a starting point.
+_Avoid_: Meme background, template image
+
+**Base Image**:
+Whichever image is currently on the canvas — either a Meme Template or a user-uploaded image.
+_Avoid_: Source image, canvas image
+
+**Text Overlay**:
+A draggable, editable text box rendered on top of the Base Image.
+_Avoid_: Caption zone, text box, caption
+
+**Icon Overlay**:
+A draggable emoji rendered on top of the Base Image.
+_Avoid_: Sticker, emoji caption
+
+**Canvas Padding**:
+Extra solid-color bars added above and/or below the Base Image for additional caption space.
+_Avoid_: Padding bars, borders
+
+**Meme Output**:
+The final composited image (Base Image + Canvas Padding + all overlays) exported as a file.
+_Avoid_: Final meme, rendered meme
+
+**Export Format**:
+The output encoding (`PNG`, `JPG`, or `WebP`) chosen for the Meme Output.
+_Avoid_: Save as type, file type

@@ -99,6 +99,21 @@ import {
   convertedFileName,
 } from "../src/features/image-resizer/utils/render-image.ts";
 
+// 11. Meme Generator / Meme Engine
+import {
+  clampOverlayPosition,
+  clampOverlaySize,
+  clampPaddingFraction,
+  resolveExportDimensions,
+  createDefaultTextOverlay,
+  buildCanvasFont,
+  resolveMemeMimeType,
+  extensionForMemeFormat,
+  generateMemeFileName,
+  filterTemplates,
+  parseTemplatesManifest,
+} from "../src/features/meme-generator/utils/meme-engine.ts";
+
 console.log("🚀 Running OmniTools Unit Tests...\n");
 
 let passed = 0;
@@ -723,6 +738,87 @@ test("convertedFileName swaps extension for target mime", () => {
   assert.equal(convertedFileName("archive.tar.gz", "image/webp"), "archive.tar.webp");
   assert.equal(convertedFileName("noext", "image/jpeg"), "noext.jpg");
   assert.equal(convertedFileName("shot.PNG", "image/jpeg"), "shot.jpg");
+});
+
+// 11. Meme Generator tests
+console.log("=== Meme Generator ===");
+test("clampOverlayPosition keeps fractions in 0-1", () => {
+  assert.deepEqual(clampOverlayPosition(0.5, 0.5), { x: 0.5, y: 0.5 });
+  assert.deepEqual(clampOverlayPosition(-2, 3), { x: 0, y: 1 });
+  assert.deepEqual(clampOverlayPosition(NaN, 0.25), { x: 0, y: 0.25 });
+});
+
+test("clampOverlaySize enforces min/max bounds", () => {
+  assert.equal(clampOverlaySize(0.09), 0.09);
+  assert.equal(clampOverlaySize(0), 0.02);
+  assert.equal(clampOverlaySize(99), 0.5);
+});
+
+test("clampPaddingFraction enforces 0-0.5 range", () => {
+  assert.equal(clampPaddingFraction(0.2), 0.2);
+  assert.equal(clampPaddingFraction(-1), 0);
+  assert.equal(clampPaddingFraction(0.9), 0.5);
+});
+
+test("resolveExportDimensions adds Canvas Padding in px", () => {
+  assert.deepEqual(
+    resolveExportDimensions(800, 600, { top: 0.1, bottom: 0.2, color: "#ffffff" }),
+    { width: 800, height: 600, padTopPx: 60, padBottomPx: 120 },
+  );
+  assert.deepEqual(
+    resolveExportDimensions(800, 600, { top: 0, bottom: 0, color: "#ffffff" }),
+    { width: 800, height: 600, padTopPx: 0, padBottomPx: 0 },
+  );
+});
+
+test("createDefaultTextOverlay spreads first/last overlays top/bottom", () => {
+  const solo = createDefaultTextOverlay(0, 1);
+  assert.equal(solo.y, 0.5);
+  assert.equal(solo.text, "TEXT HERE");
+  assert.equal(createDefaultTextOverlay(0, 2).y, 0.08);
+  assert.equal(createDefaultTextOverlay(1, 2).y, 0.9);
+});
+
+test("buildCanvasFont encodes style/size/family", () => {
+  const base = createDefaultTextOverlay(0, 1);
+  assert.equal(buildCanvasFont(base, 1000), "90px Impact, 'Arial Black', sans-serif");
+  assert.equal(
+    buildCanvasFont({ ...base, bold: true, italic: true, font: "serif" }, 1000),
+    "italic bold 90px Georgia, 'Times New Roman', serif",
+  );
+});
+
+test("meme format helpers map mime/extension/filename", () => {
+  assert.equal(resolveMemeMimeType("jpeg"), "image/jpeg");
+  assert.equal(resolveMemeMimeType("webp"), "image/webp");
+  assert.equal(resolveMemeMimeType("png"), "image/png");
+  assert.equal(extensionForMemeFormat("jpeg"), ".jpg");
+  assert.equal(generateMemeFileName("Drake Hotline Bling", "png"), "meme-drake-hotline-bling.png");
+  assert.equal(generateMemeFileName("!!!", "webp"), "meme-custom.webp");
+});
+
+test("filterTemplates matches Meme Template names case-insensitively", () => {
+  const templates = [
+    { id: "a", name: "Drake Hotline Bling", file: "a.svg", defaultTexts: [] },
+    { id: "b", name: "Distracted Boyfriend", file: "b.svg", defaultTexts: [] },
+  ];
+  assert.equal(filterTemplates(templates, "").length, 2);
+  assert.deepEqual(filterTemplates(templates, "drake").map((t) => t.id), ["a"]);
+  assert.deepEqual(filterTemplates(templates, "BOYFRIEND").map((t) => t.id), ["b"]);
+  assert.equal(filterTemplates(templates, "nope").length, 0);
+});
+
+test("parseTemplatesManifest keeps valid entries, drops malformed ones", () => {
+  const parsed = parseTemplatesManifest([
+    { id: "a", name: "A", file: "a.svg", defaultTexts: ["x", 42, "y"] },
+    { id: "", name: "Bad", file: "b.svg" },
+    "nope",
+    { id: "c", name: "C", file: "c.svg" },
+  ]);
+  assert.equal(parsed.length, 2);
+  assert.deepEqual(parsed[0].defaultTexts, ["x", "y"]);
+  assert.deepEqual(parsed[1].defaultTexts, []);
+  assert.deepEqual(parseTemplatesManifest({}), []);
 });
 
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);

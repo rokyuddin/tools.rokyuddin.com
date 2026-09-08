@@ -1,0 +1,50 @@
+[
+  {
+    "id": "drake-hotline-bling",
+    "name": "Drake Hotline Bling",
+    "file": "drake-hotline-bling.svg",
+    "defaultTexts": ["TEXT HERE", "TEXT HERE"]
+  },
+  {
+    "id": "distracted-boyfriend",
+    "name": "Distracted Boyfriend",
+    "file": "distracted-boyfriend.svg",
+    "defaultTexts": ["TEXT HERE", "TEXT HERE"]
+  },
+  {
+    "id": "two-buttons",
+    "name": "Two Buttons",
+    "file": "two-buttons.svg",
+    "defaultTexts": ["TEXT HERE"]
+  },
+  {
+    "id": "uno-draw-25",
+    "name": "Uno Draw 25",
+    "file": "uno-draw-25.svg",
+    "defaultTexts": ["TEXT HERE"]
+  },
+  {
+    "id": "left-exit-12",
+    "name": "Left Exit 12 Off Ramp",
+    "file": "left-exit-12.svg",
+    "defaultTexts": ["TEXT HERE", "TEXT HERE"]
+  },
+  {
+    "id": "change-my-mind",
+    "name": "Change My Mind",
+    "file": "change-my-mind.svg",
+    "defaultTexts": ["TEXT HERE"]
+  },
+  {
+    "id": "bernie-sanders",
+    "name": "Bernie Sanders",
+    "file": "bernie-sanders.svg",
+    "defaultTexts": ["TEXT HERE"]
+  },
+  {
+    "id": "buff-vs-cheems",
+    "name": "Buff Doge vs Cheems",
+    "file": "buff-vs-cheems.svg",
+    "defaultTexts": ["TEXT HERE", "TEXT HERE"]
+  }
+]
