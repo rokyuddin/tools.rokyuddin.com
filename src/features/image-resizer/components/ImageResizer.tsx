@@ -5,18 +5,22 @@ import JSZip from "jszip";
 import {
   Crop,
   Download,
+  FileArchive,
   FlipHorizontal2,
   FlipVertical2,
   Info,
-  Plus,
+  RotateCcw,
   RotateCw,
-  Trash2,
+  Sliders,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UploadDropzone } from "@/components/upload/UploadDropzone";
 import { formatBytes, triggerDownload } from "@/lib/utils";
 import {
@@ -289,81 +293,79 @@ export function ImageResizer() {
 
   if (items.length === 0) {
     return (
-      <div className="space-y-3">
-        <div className="rounded-2xl bg-blue-500/90 p-2 sm:p-3">
-          <div className="rounded-xl border-2 border-dashed border-white/50 bg-blue-500 px-4 py-10 text-center">
-            <UploadDropzone
-              multiple
-              accept={ACCEPT}
-              maxSizeMB={50}
-              title="Select Images"
-              subtitle="or, drag and drop images here — JPG, PNG, WebP, AVIF, GIF, BMP up to 50MB"
-              onFilesSelected={handleFilesSelected}
-              className="[&>div:first-child]:border-0 [&>div:first-child]:bg-transparent [&>div:first-child]:shadow-none"
-            />
-          </div>
-        </div>
+      <div className="space-y-8">
+        <UploadDropzone
+          multiple
+          accept={ACCEPT}
+          maxSizeMB={50}
+          title="Drop your images here, or browse"
+          subtitle="Supports JPG, PNG, WebP, AVIF, GIF, BMP up to 50MB. Processed 100% locally in your browser."
+          onFilesSelected={handleFilesSelected}
+        />
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-12 items-start">
+    <div className="space-y-8">
+      <div className="grid gap-8 lg:grid-cols-12 items-start">
       {/* Settings sidebar */}
-      <Card className="lg:col-span-4">
+      <Card className="lg:col-span-4 border-border shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center justify-between">
-            Resize Settings
-            <Button variant="ghost" size="sm" onClick={resetAll} className="text-xs">
-              <Trash2 className="size-3 mr-1" /> Clear
+            <span className="flex items-center gap-2">
+              <Sliders className="size-4 text-primary" />
+              Resize Settings
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetAll}
+              className="text-xs text-muted-foreground hover:text-foreground h-8"
+            >
+              <RotateCcw className="size-3 mr-1" />
+              Reset
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 text-xs font-semibold">
-            {(["size", "percentage", "social"] as ResizeMode[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={`rounded-md py-1.5 cursor-pointer ${mode === m ? "bg-background shadow text-foreground" : "text-muted-foreground"}`}
-              >
-                {m === "size" ? "By Size" : m === "percentage" ? "As %" : "Social"}
-              </button>
-            ))}
-          </div>
+        <CardContent className="space-y-6">
+          <Tabs value={mode} onValueChange={(v) => setMode(v as ResizeMode)}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="size">By Size</TabsTrigger>
+              <TabsTrigger value="percentage">As %</TabsTrigger>
+              <TabsTrigger value="social">Social</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           {mode === "size" && (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <label className="text-xs space-y-1">
-                  <span className="font-semibold">Width (px)</span>
-                  <input
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Field>
+                  <FieldLabel className="text-xs">Width (px)</FieldLabel>
+                  <Input
                     value={width}
                     onChange={(e) => { setWidth(e.target.value.replace(/[^0-9]/g, "")); setLastDim("width"); }}
                     placeholder="Enter Width"
                     inputMode="numeric"
-                    className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm"
                   />
-                </label>
-                <label className="text-xs space-y-1">
-                  <span className="font-semibold">Height (px)</span>
-                  <input
+                </Field>
+                <Field>
+                  <FieldLabel className="text-xs">Height (px)</FieldLabel>
+                  <Input
                     value={height}
                     onChange={(e) => { setHeight(e.target.value.replace(/[^0-9]/g, "")); setLastDim("height"); }}
                     placeholder="Enter Height"
                     inputMode="numeric"
-                    className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm"
                   />
-                </label>
+                </Field>
               </div>
               <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
                 <input
                   type="checkbox"
                   checked={lockAspect}
                   onChange={(e) => setLockAspect(e.target.checked)}
-                  className="size-3.5 accent-blue-500"
+                  className="size-3.5 accent-primary"
                 />
                 Lock Aspect Ratio
               </label>
@@ -371,10 +373,12 @@ export function ImageResizer() {
           )}
 
           {mode === "percentage" && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-semibold">
-                <span>Scale</span>
-                <span className="font-mono text-primary">{percent}%</span>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-semibold text-foreground">Scale:</span>
+                <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
+                  {percent}%
+                </span>
               </div>
               <Slider value={percent} onValueChange={setPercent} min={1} max={300} step={1} />
               <div className="grid grid-cols-4 gap-1.5">
@@ -383,7 +387,11 @@ export function ImageResizer() {
                     key={p}
                     type="button"
                     onClick={() => setPercent(p)}
-                    className={`text-xs py-1.5 rounded-md font-semibold border cursor-pointer ${percent === p ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
+                    className={`text-xs py-1.5 rounded-md font-semibold border transition-colors cursor-pointer ${
+                      percent === p
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-muted-foreground border-border hover:text-foreground"
+                    }`}
                   >
                     {p}%
                   </button>
@@ -393,167 +401,246 @@ export function ImageResizer() {
           )}
 
           {mode === "social" && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="grid grid-cols-1 gap-1.5">
                 {SOCIAL_PRESETS.map((p) => (
                   <button
                     key={p.id}
                     type="button"
                     onClick={() => setPresetId(p.id)}
-                    className={`flex justify-between rounded-md border px-2.5 py-2 text-xs font-medium cursor-pointer ${presetId === p.id ? "border-primary bg-primary/5 text-foreground" : "border-border text-muted-foreground"}`}
+                    className={`flex items-center justify-between text-xs px-3 py-1.5 rounded-lg border font-semibold transition-colors cursor-pointer ${
+                      presetId === p.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-muted-foreground border-border hover:text-foreground"
+                    }`}
                   >
                     <span>{p.label}</span>
                     <span className="font-mono">{p.width}×{p.height}</span>
                   </button>
                 ))}
               </div>
-              <label className="text-xs space-y-1 block">
-                <span className="font-semibold">Fit</span>
+              <Field>
+                <FieldLabel className="text-xs">Fit</FieldLabel>
                 <select
+                  aria-label="Social preset fit mode"
                   value={fit}
                   onChange={(e) => setFit(e.target.value as FitMode)}
-                  className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm"
+                  className="w-full h-11 rounded-lg border border-input bg-background px-3 py-2 text-xs sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring cursor-pointer"
                 >
                   <option value="crop-fill">Crop fill</option>
                   <option value="blur-fill">Blur fill</option>
                   <option value="stretch">Stretch</option>
                 </select>
-              </label>
+              </Field>
             </div>
           )}
 
-          <div className="space-y-3 border-t border-border/60 pt-4">
-            <h4 className="text-sm font-bold">Export Settings</h4>
-            <label className="text-xs space-y-1 block">
-              <span className="font-semibold">Target File Size (optional, JPG/WebP)</span>
-              <div className="flex gap-2">
-                <input
-                  value={targetKB}
-                  onChange={(e) => setTargetKB(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="e.g. 200"
-                  inputMode="numeric"
-                  className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm"
-                />
-                <span className="rounded-md border border-border bg-muted px-3 py-2 text-xs font-mono">KB</span>
+          <div className="space-y-6 pt-2 border-t border-border/60">
+            <div className="space-y-3">
+              <span className="text-xs font-semibold text-foreground block pt-2">
+                Export Settings
+              </span>
+              <Field>
+                <FieldLabel className="text-xs">Target File Size (optional, JPG/WebP)</FieldLabel>
+                <div className="flex gap-2">
+                  <Input
+                    value={targetKB}
+                    onChange={(e) => setTargetKB(e.target.value.replace(/[^0-9]/g, ""))}
+                    placeholder="e.g. 200"
+                    inputMode="numeric"
+                  />
+                  <span className="rounded-xl border border-border bg-muted px-3 py-2 text-xs font-mono shrink-0 flex items-center">KB</span>
+                </div>
+              </Field>
+              <Field>
+                <FieldLabel className="text-xs">Save Image As</FieldLabel>
+                <select
+                  aria-label="Export format"
+                  value={format}
+                  onChange={(e) => setFormat(e.target.value)}
+                  className="w-full h-11 rounded-lg border border-input bg-background px-3 py-2 text-xs sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+                >
+                  <option value="original">Original</option>
+                  <option value="jpeg">JPG</option>
+                  <option value="png">PNG</option>
+                  <option value="webp">WebP</option>
+                </select>
+              </Field>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold text-foreground">Quality Level:</span>
+                  <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
+                    {quality}%
+                  </span>
+                </div>
+                <Slider value={quality} onValueChange={setQuality} min={10} max={100} step={1} />
+                <div className="flex justify-between text-[11px] text-muted-foreground">
+                  <span>Smaller File</span>
+                  <span>Balanced (90%)</span>
+                  <span>High Quality</span>
+                </div>
               </div>
-            </label>
-            <label className="text-xs space-y-1 block">
-              <span className="font-semibold">Save Image As</span>
-              <select
-                value={format}
-                onChange={(e) => setFormat(e.target.value)}
-                className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm"
-              >
-                <option value="original">Original</option>
-                <option value="jpeg">JPG</option>
-                <option value="png">PNG</option>
-                <option value="webp">WebP</option>
-              </select>
-            </label>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold">
-                <span>Quality</span>
-                <span className="font-mono text-primary">{quality}%</span>
-              </div>
-              <Slider value={quality} onValueChange={setQuality} min={10} max={100} step={1} />
             </div>
             {totalOut > 0 && (
-              <p className="text-xs text-muted-foreground">Total output: {formatBytes(totalOut)}</p>
+              <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Total output:</span>
+                  <span className="font-mono font-medium text-foreground">{formatBytes(totalOut)}</span>
+                </div>
+              </div>
             )}
             <Button type="button" onClick={downloadAllZip} disabled={items.length === 0} className="w-full">
               <Download className="size-4 mr-2" /> Export {isProcessing ? "(…)" : `(${items.length})`}
             </Button>
-            <UploadDropzone
-              multiple
-              accept={ACCEPT}
-              maxSizeMB={50}
-              title="Add more"
-              subtitle="Drop, browse, or Ctrl+V paste"
-              onFilesSelected={handleFilesSelected}
-              className="[&>div:first-child]:p-4"
-            />
+            <div className="pt-2">
+              <UploadDropzone
+                multiple
+                accept={ACCEPT}
+                maxSizeMB={50}
+                title="Add more images"
+                subtitle="Drop, browse, or press Ctrl+V to paste"
+                onFilesSelected={handleFilesSelected}
+              />
+            </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
         </CardContent>
       </Card>
 
       {/* Cards */}
-      <div className="lg:col-span-8 space-y-3">
-        <div className="flex items-center justify-between border-b border-border pb-2">
-          <h3 className="font-bold flex items-center gap-2">
-            <Plus className="size-4 text-primary" /> Images ({items.length})
-            {isProcessing && <span className="text-xs font-normal text-muted-foreground animate-pulse">(Processing…)</span>}
+      <div className="lg:col-span-8 space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-border">
+          <h3 className="font-heading text-lg font-bold text-foreground flex items-center gap-2">
+            <FileArchive className="size-5 text-primary" />
+            <span>Resized Images ({items.length})</span>
+            {isProcessing && (
+              <span className="text-xs font-normal text-muted-foreground animate-pulse">
+                (Processing...)
+              </span>
+            )}
           </h3>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2">
           {items.map((item) => {
             const target = targetOf(item);
             const out = outputs[item.id];
             const t = transforms[item.id] ?? DEFAULT_TRANSFORM;
             const upscale = isUpscale(item.origW, item.origH, target.width, target.height);
             return (
-              <div key={item.id} className="rounded-xl border border-border bg-card overflow-hidden">
-                <div className="relative bg-muted/40 flex items-center justify-center min-h-40 p-2">
-                  <div className="absolute top-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                    <button type="button" title="Crop" onClick={() => setExpandedCrop(expandedCrop === item.id ? null : item.id)} className="rounded-full bg-background/90 p-1.5 border border-border hover:text-primary cursor-pointer"><Crop className="size-3.5" /></button>
-                    <button
+              <Card key={item.id} className="border-border shadow-xs overflow-hidden flex flex-col justify-between">
+                <CardHeader className="p-4 pb-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-foreground truncate" title={item.file.name}>
+                      {item.file.name}
+                    </span>
+                    <Button
                       type="button"
-                      title="Rotate 90°"
-                      onClick={() => updateTransform(item.id, { rotation: ((t.rotation + 90) % 360) as Rotation })}
-                      className="rounded-full bg-background/90 p-1.5 border border-border hover:text-primary cursor-pointer"
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => removeItem(item.id)}
+                      className="text-muted-foreground hover:text-destructive shrink-0"
+                      title="Remove file"
                     >
-                      <RotateCw className="size-3.5" />
-                    </button>
-                    <button type="button" title="Flip H" onClick={() => updateTransform(item.id, { flipH: !t.flipH })} className="rounded-full bg-background/90 p-1.5 border border-border hover:text-primary cursor-pointer"><FlipHorizontal2 className="size-3.5" /></button>
-                    <button type="button" title="Flip V" onClick={() => updateTransform(item.id, { flipV: !t.flipV })} className="rounded-full bg-background/90 p-1.5 border border-border hover:text-primary cursor-pointer"><FlipVertical2 className="size-3.5" /></button>
-                    <button type="button" title="Info" onClick={() => setShowInfo(showInfo === item.id ? null : item.id)} className="rounded-full bg-background/90 p-1.5 border border-border hover:text-primary cursor-pointer"><Info className="size-3.5" /></button>
-                    <button type="button" title="Remove" onClick={() => removeItem(item.id)} className="rounded-full bg-background/90 p-1.5 border border-border hover:text-destructive cursor-pointer"><X className="size-3.5" /></button>
+                      <X className="size-4" />
+                    </Button>
                   </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={out?.url ?? item.img.src} alt={item.file.name} className="max-h-56 object-contain" />
-                </div>
-                <div className="p-3 space-y-2">
-                  <h4 className="text-sm font-semibold truncate" title={item.file.name}>{item.file.name}</h4>
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{item.origW}×{item.origH}</span>
-                    <span>→</span>
-                    <span className="rounded bg-blue-500/15 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 font-mono font-bold">{target.width}×{target.height}</span>
-                    {out && <Badge variant="secondary" className="text-[10px]">{formatBytes(out.size)}</Badge>}
-                    {upscale && <span className="text-[10px] text-amber-600">larger than original</span>}
-                    {out && !out.reached && <span className="text-[10px] text-destructive">target size unreachable</span>}
+                  <CardTitle className="text-xs font-semibold text-muted-foreground font-mono">
+                    {item.origW}×{item.origH} → <span className="text-primary">{target.width}×{target.height}</span>
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent className="p-4 pt-2 space-y-3">
+                  <div className="relative w-full h-44 rounded-xl overflow-hidden bg-muted/40 border border-border flex items-center justify-center p-2">
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+                      <Button type="button" variant="ghost" size="icon-sm" title="Crop" onClick={() => setExpandedCrop(expandedCrop === item.id ? null : item.id)} className="bg-background/90 border border-border h-7 w-7" data-active={expandedCrop === item.id}>
+                        <Crop className="size-3.5" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Rotate 90°"
+                        onClick={() => updateTransform(item.id, { rotation: ((t.rotation + 90) % 360) as Rotation })}
+                        className="bg-background/90 border border-border h-7 w-7"
+                      >
+                        <RotateCw className="size-3.5" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon-sm" title="Flip horizontal" onClick={() => updateTransform(item.id, { flipH: !t.flipH })} className="bg-background/90 border border-border h-7 w-7" data-active={t.flipH}>
+                        <FlipHorizontal2 className="size-3.5" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon-sm" title="Flip vertical" onClick={() => updateTransform(item.id, { flipV: !t.flipV })} className="bg-background/90 border border-border h-7 w-7" data-active={t.flipV}>
+                        <FlipVertical2 className="size-3.5" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon-sm" title="Info" onClick={() => setShowInfo(showInfo === item.id ? null : item.id)} className="bg-background/90 border border-border h-7 w-7" data-active={showInfo === item.id}>
+                        <Info className="size-3.5" />
+                      </Button>
+                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={out?.url ?? item.img.src}
+                      alt={item.file.name}
+                      className="max-h-full max-w-full object-contain rounded-md"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    {out && (
+                      <span>
+                        <strong className="text-foreground font-mono">{formatBytes(out.size)}</strong>
+                      </span>
+                    )}
+                    {out && !out.reached && (
+                      <Badge variant="destructive" className="text-[10px] py-0">
+                        target size unreachable
+                      </Badge>
+                    )}
+                    {upscale && (
+                      <Badge variant="warning" className="text-[10px] py-0">
+                        larger than original
+                      </Badge>
+                    )}
                   </div>
                   {showInfo === item.id && (
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground/80">
                       {item.file.type || "unknown type"} · {formatBytes(item.file.size)} · {item.origW}×{item.origH}px
                     </p>
                   )}
                   {expandedCrop === item.id && (
-                    <div className="grid grid-cols-4 gap-1.5 rounded-lg border border-border p-2">
+                    <div className="grid grid-cols-4 gap-2 rounded-xl border border-border bg-muted/30 p-3">
                       {(["x", "y", "w", "h"] as const).map((k) => (
-                        <label key={k} className="text-[10px] space-y-0.5">
-                          <span className="font-semibold uppercase">{k}</span>
-                          <input
+                        <Field key={k}>
+                          <FieldLabel className="text-[10px] uppercase">{k} %</FieldLabel>
+                          <Input
+                            inputSize="sm"
                             value={Math.round(t.crop[k] * 100)}
                             onChange={(e) => {
                               const v = Math.min(100, Math.max(0, Number(e.target.value) || 0)) / 100;
                               updateTransform(item.id, { crop: { ...t.crop, [k]: v } });
                             }}
                             inputMode="numeric"
-                            className="w-full rounded border border-border bg-background px-1.5 py-1 text-xs"
                           />
-                        </label>
+                        </Field>
                       ))}
-                      <button type="button" onClick={() => updateTransform(item.id, { crop: FULL_CROP })} className="col-span-4 text-[11px] text-primary hover:underline cursor-pointer">Reset crop</button>
+                      <button type="button" onClick={() => updateTransform(item.id, { crop: FULL_CROP })} className="col-span-4 text-[11px] font-medium text-primary hover:underline cursor-pointer">Reset crop</button>
                     </div>
                   )}
-                  <Button type="button" size="sm" onClick={() => downloadOne(item)} disabled={!out} className="w-full text-xs">
-                    <Download className="size-3.5 mr-1" /> Download
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={() => downloadOne(item)}
+                    disabled={!out}
+                    className="w-full text-xs"
+                  >
+                    <Download className="size-3.5 mr-1" />
+                    Download
                   </Button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
+      </div>
       </div>
     </div>
   );
