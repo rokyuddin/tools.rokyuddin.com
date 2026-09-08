@@ -520,7 +520,7 @@ export function ImageResizer() {
             )}
           </h3>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
           {items.map((item) => {
             const target = targetOf(item);
             const out = outputs[item.id];
@@ -550,7 +550,7 @@ export function ImageResizer() {
                 </CardHeader>
 
                 <CardContent className="p-4 pt-2 space-y-3">
-                  <div className="relative w-full h-44 rounded-xl overflow-hidden bg-muted/40 border border-border flex items-center justify-center p-2">
+                  <div className="relative w-full h-80 rounded-xl overflow-hidden bg-muted/40 border border-border flex items-center justify-center p-3">
                     <div className="absolute top-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
                       <Button type="button" variant="ghost" size="icon-sm" title="Crop" onClick={() => setExpandedCrop(expandedCrop === item.id ? null : item.id)} className="bg-background/90 border border-border h-7 w-7" data-active={expandedCrop === item.id}>
                         <Crop className="size-3.5" />
