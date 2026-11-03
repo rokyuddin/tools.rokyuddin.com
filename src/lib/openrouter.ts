@@ -1,7 +1,7 @@
 import { OpenRouter } from "@openrouter/sdk";
 import { siteConfig } from "@/config/site";
 
-export const OPENROUTER_DEFAULT_WHISPER_MODEL = "openai/whisper-large-v3";
+export const OPENROUTER_DEFAULT_WHISPER_MODEL = "openai/whisper-large-v3-turbo";
 export const OPENROUTER_DEFAULT_TEXT_MODEL = "google/gemini-2.5-flash";
 
 export const STORAGE_KEY_OPENROUTER = "omnitools_openrouter_api_key";

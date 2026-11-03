@@ -4,6 +4,7 @@ import {
   OPENROUTER_DEFAULT_WHISPER_MODEL,
   OPENROUTER_DEFAULT_TEXT_MODEL,
 } from "@/lib/openrouter";
+import { mapWhisperResponseToCues } from "@/features/audio-to-transcript/utils/subtitle-formats";
 
 export const maxDuration = 60;
 
@@ -119,7 +120,103 @@ export async function POST(req: Request) {
     const mimeType = file.type || "audio/mp3";
     const audioFormat = mimeType.includes("wav") ? "wav" : "mp3";
 
-    // Primary: Gemini 2.5 Flash for continuous full-coverage speech-to-text with timestamps
+    // 1. Primary: Whisper Large V3 Turbo via OpenRouter Audio Transcriptions
+    let transcriptionData: any = null;
+    let transcriptionErrorMsg = "";
+
+    // Attempt A: Multipart Form Data
+    try {
+      const openRouterFormData = new FormData();
+      const audioBlob = new Blob([arrayBuffer], { type: mimeType || "audio/mp3" });
+      openRouterFormData.append("file", audioBlob, "audio.mp3");
+      openRouterFormData.append("model", OPENROUTER_DEFAULT_WHISPER_MODEL);
+      openRouterFormData.append("language", langCode);
+      openRouterFormData.append("response_format", "verbose_json");
+      openRouterFormData.append("timestamp_granularities[]", "segment");
+      openRouterFormData.append(
+        "prompt",
+        langCode === "bn"
+          ? "বাংলা অডিও কথোপকথন ও সাবটাইটেল। শুরু থেকে শেষ পর্যন্ত সম্পূর্ণ বক্তব্য নির্ভুলভাবে টাইমস্ট্যাম্পসহ ট্রান্সক্রাইব করুন।"
+          : "Accurate, continuous English speech-to-text with timestamps across the entire audio.",
+      );
+      openRouterFormData.append("temperature", "0.0");
+
+      const openRouterRes = await fetch(
+        "https://openrouter.ai/api/v1/audio/transcriptions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey.trim()}`,
+            "HTTP-Referer": siteConfig.url,
+            "X-OpenRouter-Title": siteConfig.name,
+          },
+          body: openRouterFormData,
+        },
+      );
+
+      if (openRouterRes.ok) {
+        transcriptionData = await openRouterRes.json();
+      } else {
+        const errorBody = await openRouterRes.json().catch(() => ({}));
+        transcriptionErrorMsg =
+          errorBody.error?.message ||
+          `Whisper API returned status ${openRouterRes.status}.`;
+      }
+    } catch (err: unknown) {
+      transcriptionErrorMsg =
+        err instanceof Error ? err.message : "Multipart upload failed.";
+    }
+
+    // Attempt B: JSON Base64 Payload fallback for Whisper
+    if (!transcriptionData) {
+      try {
+        const jsonRes = await fetch(
+          "https://openrouter.ai/api/v1/audio/transcriptions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey.trim()}`,
+              "HTTP-Referer": siteConfig.url,
+              "X-OpenRouter-Title": siteConfig.name,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: OPENROUTER_DEFAULT_WHISPER_MODEL,
+              input_audio: {
+                data: base64Audio,
+                format: audioFormat,
+              },
+              response_format: "verbose_json",
+              timestamp_granularities: ["segment"],
+              language: langCode,
+              temperature: 0.0,
+            }),
+          },
+        );
+
+        if (jsonRes.ok) {
+          transcriptionData = await jsonRes.json();
+        } else {
+          const errBody = await jsonRes.json().catch(() => ({}));
+          transcriptionErrorMsg =
+            errBody.error?.message || transcriptionErrorMsg;
+        }
+      } catch (err: unknown) {
+        transcriptionErrorMsg =
+          err instanceof Error ? err.message : transcriptionErrorMsg;
+      }
+    }
+
+    // If Whisper succeeded, return segments & mapped subtitle cues
+    if (transcriptionData) {
+      const cues = mapWhisperResponseToCues(transcriptionData);
+      return NextResponse.json({
+        ...transcriptionData,
+        cues,
+      });
+    }
+
+    // Fallback: Gemini 2.5 Flash if Whisper endpoint is unavailable
     try {
       const geminiPrompt = `You are an expert bilingual speech-to-text transcriber and subtitle generator. Transcribe the entire attached audio recording from 00:00 to the end in ${langCode === "bn" ? "Bangla / Bengali (বাংলা)" : "English"}.
 CRITICAL INSTRUCTIONS:
@@ -181,51 +278,17 @@ Output ONLY the raw JSON array. Do NOT wrap in markdown fences or include explan
         }
       }
     } catch (geminiErr) {
-      console.warn("Gemini transcription fallback to Whisper:", geminiErr);
+      console.warn("Fallback to Gemini failed:", geminiErr);
     }
 
-    // Fallback: Whisper Large v3 with prompt and verbose_json
-    const openRouterFormData = new FormData();
-    const audioBlob = new Blob([arrayBuffer], { type: "audio/mp3" });
-    openRouterFormData.append("file", audioBlob, "audio.mp3");
-    openRouterFormData.append("model", OPENROUTER_DEFAULT_WHISPER_MODEL);
-    openRouterFormData.append("language", langCode);
-    openRouterFormData.append("response_format", "verbose_json");
-    openRouterFormData.append(
-      "prompt",
-      langCode === "bn"
-        ? "বাংলা অডিও কথোপকথন ও সাবটাইটেল। শুরু থেকে শেষ পর্যন্ত সম্পূর্ণ বক্তব্য নির্ভুলভাবে ট্রান্সক্রাইব করুন।"
-        : "Accurate, continuous English speech-to-text with timestamps across the entire audio.",
-    );
-    openRouterFormData.append("temperature", "0.0");
-
-    const openRouterRes = await fetch(
-      "https://openrouter.ai/api/v1/audio/transcriptions",
+    return NextResponse.json(
       {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey.trim()}`,
-          "HTTP-Referer": siteConfig.url,
-          "X-OpenRouter-Title": siteConfig.name,
-        },
-        body: openRouterFormData,
+        error:
+          transcriptionErrorMsg ||
+          "Audio transcription failed. Please verify your OpenRouter configuration.",
       },
+      { status: 500 },
     );
-
-    if (!openRouterRes.ok) {
-      const errorBody = await openRouterRes.json().catch(() => ({}));
-      return NextResponse.json(
-        {
-          error:
-            errorBody.error?.message ||
-            `OpenRouter transcription failed with status ${openRouterRes.status}.`,
-        },
-        { status: openRouterRes.status },
-      );
-    }
-
-    const transcriptionData = await openRouterRes.json();
-    return NextResponse.json(transcriptionData);
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : "Internal transcription error.";
