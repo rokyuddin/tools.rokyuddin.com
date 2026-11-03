@@ -1,0 +1,155 @@
+import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
+import {
+  OPENROUTER_DEFAULT_WHISPER_MODEL,
+  OPENROUTER_DEFAULT_TEXT_MODEL,
+} from "@/lib/openrouter";
+
+export const maxDuration = 60;
+
+export async function POST(req: Request) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+
+  if (!apiKey) {
+    return NextResponse.json(
+      {
+        error:
+          "OpenRouter API key is not configured on the server. Please add OPENROUTER_API_KEY in your Vercel project environment variables.",
+      },
+      { status: 503 },
+    );
+  }
+
+  try {
+    const contentType = req.headers.get("content-type") || "";
+
+    // 1. JSON payload: AI Subtitle Polishing & Translation
+    if (contentType.includes("application/json")) {
+      const body = await req.json();
+      const { cues, action } = body;
+
+      if (!cues || !Array.isArray(cues) || cues.length === 0) {
+        return NextResponse.json(
+          { error: "No subtitle cues provided." },
+          { status: 400 },
+        );
+      }
+
+      let systemPrompt = "";
+      if (action === "polish") {
+        systemPrompt =
+          "You are an expert bilingual subtitle editor. Correct grammar, spelling, and natural punctuation in the provided subtitles while preserving the exact Bengali or English language, timestamps, and JSON structure. Return ONLY a valid JSON array of objects with keys 'id', 'start', 'end', 'text'.";
+      } else if (action === "translate_to_bn") {
+        systemPrompt =
+          "Translate each subtitle cue into natural, fluent Bengali (বাংলা). Preserve the exact 'id', 'start', and 'end' timing values. Return ONLY a valid JSON array of objects with keys 'id', 'start', 'end', 'text'.";
+      } else {
+        systemPrompt =
+          "Translate each subtitle cue into clear, natural English. Preserve the exact 'id', 'start', and 'end' timing values. Return ONLY a valid JSON array of objects with keys 'id', 'start', 'end', 'text'.";
+      }
+
+      const cueItems = cues.map((c: any) => ({
+        id: c.id,
+        start: c.start,
+        end: c.end,
+        text: c.text,
+      }));
+
+      const userPrompt = `Here are the subtitle cues in JSON format:\n${JSON.stringify(cueItems, null, 2)}`;
+
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey.trim()}`,
+          "HTTP-Referer": siteConfig.url,
+          "X-OpenRouter-Title": siteConfig.name,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_DEFAULT_TEXT_MODEL,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          temperature: 0.2,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        return NextResponse.json(
+          {
+            error:
+              errorBody.error?.message ||
+              `OpenRouter completion failed with status ${res.status}.`,
+          },
+          { status: res.status },
+        );
+      }
+
+      const completion = await res.json();
+      const rawText = completion.choices?.[0]?.message?.content || "";
+      const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+
+      if (!jsonMatch) {
+        return NextResponse.json(
+          { error: "Could not parse AI response into subtitle cues." },
+          { status: 500 },
+        );
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      return NextResponse.json({ cues: parsed });
+    }
+
+    // 2. Multipart form data: Speech-to-Text Audio Transcription
+    const formData = await req.formData();
+    const file = formData.get("file") as File | Blob | null;
+    const language = (formData.get("language") as string) || "bn-BD";
+    const langCode = language.startsWith("bn") ? "bn" : "en";
+
+    if (!file) {
+      return NextResponse.json(
+        { error: "No audio file provided." },
+        { status: 400 },
+      );
+    }
+
+    const openRouterFormData = new FormData();
+    openRouterFormData.append("file", file, "audio.mp3");
+    openRouterFormData.append("model", OPENROUTER_DEFAULT_WHISPER_MODEL);
+    openRouterFormData.append("language", langCode);
+    openRouterFormData.append("response_format", "verbose_json");
+
+    const openRouterRes = await fetch(
+      "https://openrouter.ai/api/v1/audio/transcriptions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey.trim()}`,
+          "HTTP-Referer": siteConfig.url,
+          "X-OpenRouter-Title": siteConfig.name,
+        },
+        body: openRouterFormData,
+      },
+    );
+
+    if (!openRouterRes.ok) {
+      const errorBody = await openRouterRes.json().catch(() => ({}));
+      return NextResponse.json(
+        {
+          error:
+            errorBody.error?.message ||
+            `OpenRouter transcription failed with status ${openRouterRes.status}.`,
+        },
+        { status: openRouterRes.status },
+      );
+    }
+
+    const transcriptionData = await openRouterRes.json();
+    return NextResponse.json(transcriptionData);
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Internal transcription error.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

@@ -12,9 +12,7 @@ import {
   Check,
   RotateCcw,
   Sparkles,
-  Key,
   Globe,
-  HelpCircle,
   FileText,
   AlertCircle,
   Layers,
@@ -45,11 +43,11 @@ import {
   parseVtt,
 } from "../utils/subtitle-formats";
 import {
-  getOpenRouterApiKey,
-  saveOpenRouterApiKey,
   transcribeWithOpenRouter,
   polishSubtitlesWithOpenRouter,
 } from "../utils/ai-transcriber";
+import { decodeAudioFromVideo } from "@/features/video-to-audio/utils/audio-extractor";
+import { encodeMp3FromChannels } from "@/features/video-to-audio/utils/mp3-encoder";
 import { SubtitleVideoPlayer } from "./SubtitleVideoPlayer";
 import { TranscriptEditor } from "./TranscriptEditor";
 import { cn } from "@/lib/utils";
@@ -114,9 +112,7 @@ export function AudioToTranscript() {
   const [progress, setProgress] = useState<TranscriptionProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // AI OpenRouter modal/drawer state
-  const [showAiModal, setShowAiModal] = useState<boolean>(false);
-  const [apiKey, setApiKey] = useState<string>("");
+  // AI OpenRouter processing state
   const [isAiTranscribing, setIsAiTranscribing] = useState<boolean>(false);
   const [isPolishing, setIsPolishing] = useState<boolean>(false);
 
@@ -129,11 +125,6 @@ export function AudioToTranscript() {
   const subtitleFileInputRef = useRef<HTMLInputElement>(null);
   const playerRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const recognizerRef = useRef<any>(null);
-
-  // Load saved OpenRouter API key on mount
-  useEffect(() => {
-    setApiKey(getOpenRouterApiKey());
-  }, []);
 
   // Clean up object URLs
   useEffect(() => {
@@ -268,7 +259,7 @@ export function AudioToTranscript() {
     }
   };
 
-  // OpenRouter AI Speech-to-Text Execution
+  // OpenRouter AI Speech-to-Text Execution (via Server Route with Vercel OPENROUTER_API_KEY)
   const handleRunOpenRouter = async () => {
     const fileToTranscribe = media.audioFile || media.videoFile;
     if (!fileToTranscribe) {
@@ -276,29 +267,43 @@ export function AudioToTranscript() {
       return;
     }
 
-    if (!apiKey.trim()) {
-      setError("Please enter your OpenRouter API key (sk-or-v1-...).");
-      return;
-    }
-
-    saveOpenRouterApiKey(apiKey);
     setIsAiTranscribing(true);
     setError(null);
-    setProgress({
-      status: "transcribing",
-      message: `Transcribing audio via OpenRouter (${selectedLanguage.startsWith("bn") ? "বাংলা" : "English"})...`,
-    });
 
     try {
+      let audioPayload: File | Blob = fileToTranscribe;
+
+      // If video, extract lightweight MP3 in browser first to prevent large upload
+      if (media.isVideo && media.videoFile) {
+        setProgress({
+          status: "transcribing",
+          message: "Extracting audio track from video...",
+        });
+        const audioBuffer = await decodeAudioFromVideo(media.videoFile);
+        const numChannels = Math.min(2, audioBuffer.numberOfChannels) as 1 | 2;
+        const channelsData: Float32Array[] = [];
+        for (let c = 0; c < numChannels; c++) {
+          channelsData.push(audioBuffer.getChannelData(c));
+        }
+        audioPayload = await encodeMp3FromChannels(channelsData, {
+          sampleRate: audioBuffer.sampleRate,
+          channels: numChannels,
+          bitrate: 128,
+        });
+      }
+
+      setProgress({
+        status: "transcribing",
+        message: `Transcribing audio via OpenRouter AI (${selectedLanguage.startsWith("bn") ? "বাংলা" : "English"})...`,
+      });
+
       const resultCues = await transcribeWithOpenRouter(
-        fileToTranscribe,
-        apiKey,
+        audioPayload,
         selectedLanguage,
       );
 
       if (resultCues.length > 0) {
         setCues(resultCues);
-        setShowAiModal(false);
         setProgress({
           status: "complete",
           message: `OpenRouter transcription complete! ${resultCues.length} timestamped segments generated.`,
@@ -314,16 +319,10 @@ export function AudioToTranscript() {
     }
   };
 
-  // OpenRouter AI Polish / Translation
+  // OpenRouter AI Polish / Translation (via Server Route)
   const handlePolishSubtitles = async (action: "polish" | "translate_to_bn" | "translate_to_en") => {
     if (cues.length === 0) return;
-    if (!apiKey.trim()) {
-      setShowAiModal(true);
-      setError("Please enter your OpenRouter API key to use AI editing and translation.");
-      return;
-    }
 
-    saveOpenRouterApiKey(apiKey);
     setIsPolishing(true);
     setError(null);
     const actionLabel =
@@ -339,7 +338,7 @@ export function AudioToTranscript() {
     });
 
     try {
-      const updated = await polishSubtitlesWithOpenRouter(cues, apiKey, action);
+      const updated = await polishSubtitlesWithOpenRouter(cues, action);
       setCues(updated);
       setProgress({
         status: "complete",
@@ -560,11 +559,12 @@ export function AudioToTranscript() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowAiModal(true)}
-                className="text-xs h-8 text-primary border-primary/30 hover:bg-primary/5"
+                onClick={handleRunOpenRouter}
+                disabled={isAiTranscribing || isListening}
+                className="text-xs h-8 text-primary border-primary/30 hover:bg-primary/5 font-semibold"
               >
-                <Sparkles className="size-3.5 mr-1 text-primary" />
-                OpenRouter AI
+                <Sparkles className={cn("size-3.5 mr-1 text-primary", isAiTranscribing && "animate-spin")} />
+                {isAiTranscribing ? "Transcribing with AI..." : "AI Transcribe (OpenRouter)"}
               </Button>
 
               <Button
@@ -592,88 +592,53 @@ export function AudioToTranscript() {
             </div>
           </Card>
 
-          {/* OpenRouter AI Settings Modal / Popover */}
-          {showAiModal && (
-            <Card className="p-5 rounded-2xl border-2 border-primary/40 bg-card shadow-lg space-y-4 animate-fade-in">
-              <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-primary" />
-                  <h3 className="font-bold text-foreground text-sm">
-                    OpenRouter AI Transcription & Subtitle Studio
-                  </h3>
+          {/* OpenRouter AI Subtitle Actions Bar */}
+          {cues.length > 0 && (
+            <Card className="p-3.5 sm:p-4 rounded-xl border border-primary/20 bg-primary/5 shadow-xs flex flex-wrap items-center justify-between gap-3 animate-fade-in">
+              <div className="flex items-center gap-2.5">
+                <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <Sparkles className="size-4" />
                 </div>
+                <div>
+                  <h4 className="text-xs font-bold text-foreground">
+                    OpenRouter AI Subtitle Actions
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground">
+                    One-click bilingual grammar polishing and translations powered by OpenRouter
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => setShowAiModal(false)}
-                  className="text-xs h-7 px-2"
+                  disabled={isPolishing}
+                  onClick={() => handlePolishSubtitles("polish")}
+                  className="text-xs h-7.5 bg-card shadow-xs"
                 >
-                  Close
+                  <Sparkles className={cn("size-3.5 mr-1 text-primary", isPolishing && "animate-spin")} />
+                  {isPolishing ? "Polishing..." : "✨ Polish Grammar & Punctuation"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isPolishing}
+                  onClick={() =>
+                    handlePolishSubtitles(
+                      selectedLanguage.startsWith("bn") ? "translate_to_en" : "translate_to_bn",
+                    )
+                  }
+                  className="text-xs h-7.5 bg-card shadow-xs"
+                >
+                  <Globe className="size-3.5 mr-1 text-primary" />
+                  {isPolishing
+                    ? "Translating..."
+                    : selectedLanguage.startsWith("bn")
+                      ? "Translate to English"
+                      : "Translate to বাংলা"}
                 </Button>
               </div>
-
-              <div className="text-xs text-muted-foreground leading-relaxed flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span>
-                  Powered by OpenRouter unified AI endpoint with Whisper Large v3 speech-to-text and multilingual translation.
-                </span>
-                <a
-                  href="https://openrouter.ai/keys"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-semibold shrink-0"
-                >
-                  Get OpenRouter Key ↗
-                </a>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <Input
-                  type="password"
-                  placeholder="Enter OpenRouter API Key (sk-or-v1-...)"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="h-9 text-xs font-mono w-full sm:flex-1"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleRunOpenRouter}
-                  disabled={isAiTranscribing || !apiKey.trim()}
-                  className="h-9 text-xs font-bold w-full sm:w-auto shrink-0"
-                >
-                  {isAiTranscribing ? "Transcribing with OpenRouter..." : "Transcribe Media"}
-                </Button>
-              </div>
-
-              {/* AI Subtitle Polish & Translation Actions */}
-              {cues.length > 0 && (
-                <div className="pt-3 border-t border-border/60 flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] font-semibold text-foreground mr-1">
-                    AI Tools:
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isPolishing || !apiKey.trim()}
-                    onClick={() => handlePolishSubtitles("polish")}
-                    className="text-xs h-7"
-                  >
-                    ✨ Polish Grammar & Punctuation
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isPolishing || !apiKey.trim()}
-                    onClick={() =>
-                      handlePolishSubtitles(
-                        selectedLanguage.startsWith("bn") ? "translate_to_en" : "translate_to_bn",
-                      )
-                    }
-                    className="text-xs h-7"
-                  >
-                    🌐 {selectedLanguage.startsWith("bn") ? "Translate to English" : "Translate to বাংলা"}
-                  </Button>
-                </div>
-              )}
             </Card>
           )}
 
