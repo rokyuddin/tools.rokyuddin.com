@@ -11,6 +11,12 @@ importers:
       '@base-ui/react':
         specifier: ^1.7.0
         version: 1.7.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@breezystack/lamejs':
+        specifier: ^1.2.7
+        version: 1.2.7
+      '@openrouter/sdk':
+        specifier: ^1.5.34
+        version: 1.5.34
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -298,6 +304,9 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
+
+  '@breezystack/lamejs@1.2.7':
+    resolution: {integrity: sha512-6wc7ck65ctA75Hq7FYHTtTvGnYs6msgdxiSUICQ+A01nVOWg6rqouZB8IdyteRlfpYYiFovkf67dIeOgWIUzTA==}
 
   '@bufbuild/protobuf@2.14.0':
     resolution: {integrity: sha512-C3UGsiCwSprE2NKIIFA3hCDlpXTMCAXRZuEVp88L1GY36Y41+rYL5fryE+nOFhp4p4JPQvdV8PQ4DWgHgeTE+w==}
@@ -666,6 +675,9 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@openrouter/sdk@1.5.34':
+    resolution: {integrity: sha512-LAcWpwGXD2xdQDDrC+flHRWHHNgkh7rFpptQfRsABuOGkUfsiyKcEdCgQsKb2L59kluTMuxBGMTmlLh91qfScw==}
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -2462,6 +2474,8 @@ snapshots:
   '@biomejs/cli-win32-x64@2.4.2':
     optional: true
 
+  '@breezystack/lamejs@1.2.7': {}
+
   '@bufbuild/protobuf@2.14.0': {}
 
   '@dotenvx/dotenvx@1.75.1':
@@ -2746,6 +2760,10 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.3
+
+  '@openrouter/sdk@1.5.34':
+    dependencies:
+      zod: 3.25.76
 
   '@sec-ant/readable-stream@0.4.1': {}
 

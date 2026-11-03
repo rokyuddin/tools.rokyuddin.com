@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 const categories: Array<"All" | ToolCategory> = [
   "All",
+  "Audio & Video",
   "Images",
   "Developer",
   "General",

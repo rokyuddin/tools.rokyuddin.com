@@ -114,6 +114,34 @@ import {
   parseTemplatesManifest,
 } from "../src/features/meme-generator/utils/meme-engine.ts";
 
+// 12. Video to Audio Extractor
+import {
+  encodeWavFromChannels,
+} from "../src/features/video-to-audio/utils/wav-encoder.ts";
+import {
+  floatToInt16,
+} from "../src/features/video-to-audio/utils/mp3-encoder.ts";
+import {
+  formatTimeDisplay,
+  formatFileSize as formatAudioFileSize,
+} from "../src/features/video-to-audio/utils/audio-helpers.ts";
+
+// 13. Audio to Transcript
+import {
+  formatSrtTimestamp,
+  formatVttTimestamp,
+  formatDisplayTimestamp,
+  parseTimestamp,
+  generateSrt,
+  generateVtt,
+  generateTxt,
+  generateJson,
+  generateCsv,
+  parseSrt,
+  parseVtt,
+  mapWhisperResponseToCues,
+} from "../src/features/audio-to-transcript/utils/subtitle-formats.ts";
+
 console.log("🚀 Running OmniTools Unit Tests...\n");
 
 let passed = 0;
@@ -821,5 +849,224 @@ test("parseTemplatesManifest keeps valid entries, drops malformed ones", () => {
   assert.deepEqual(parseTemplatesManifest({}), []);
 });
 
+// === Video to Audio Extractor ===
+test("encodeWavFromChannels generates valid 16-bit PCM WAV Blob", async () => {
+  const sampleRate = 44100;
+  const numSamples = 1000;
+  const channelData = new Float32Array(numSamples);
+  channelData.fill(0.5);
+
+  const wavBlob = encodeWavFromChannels([channelData], {
+    sampleRate,
+    channels: 1,
+  });
+
+  assert.equal(wavBlob.type, "audio/wav");
+  const arrayBuffer = await wavBlob.arrayBuffer();
+  // 44 bytes header + 1000 samples * 2 bytes = 2044 bytes
+  assert.equal(arrayBuffer.byteLength, 44 + numSamples * 2);
+
+  const view = new DataView(arrayBuffer);
+  // RIFF identifier
+  assert.equal(String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3)), "RIFF");
+  // WAVE identifier
+  assert.equal(String.fromCharCode(view.getUint8(8), view.getUint8(9), view.getUint8(10), view.getUint8(11)), "WAVE");
+  // Sample rate at offset 24
+  assert.equal(view.getUint32(24, true), sampleRate);
+  // Bits per sample at offset 34
+  assert.equal(view.getUint16(34, true), 16);
+});
+
+test("encodeWavFromChannels downmixes stereo to mono correctly", async () => {
+  const left = new Float32Array([0.2, 0.4, 0.6]);
+  const right = new Float32Array([0.4, 0.6, 0.8]);
+
+  const wavBlob = encodeWavFromChannels([left, right], {
+    sampleRate: 48000,
+    channels: 1,
+  });
+
+  const arrayBuffer = await wavBlob.arrayBuffer();
+  // 44 bytes header + 3 samples * 2 bytes = 50 bytes
+  assert.equal(arrayBuffer.byteLength, 50);
+
+  const view = new DataView(arrayBuffer);
+  assert.equal(view.getUint16(22, true), 1); // 1 channel
+});
+
+test("encodeWavFromChannels respects startSample and endSample trimming", async () => {
+  const channelData = new Float32Array(500);
+  const wavBlob = encodeWavFromChannels([channelData], {
+    sampleRate: 44100,
+    channels: 1,
+    startSample: 100,
+    endSample: 250,
+  });
+
+  const arrayBuffer = await wavBlob.arrayBuffer();
+  // 44 + 150 samples * 2 = 344 bytes
+  assert.equal(arrayBuffer.byteLength, 44 + 150 * 2);
+});
+
+test("floatToInt16 clamps audio float samples to 16-bit range", () => {
+  const samples = new Float32Array([-1.5, -1.0, 0, 1.0, 1.5]);
+  const int16 = floatToInt16(samples, 0, 5);
+
+  assert.equal(int16.length, 5);
+  assert.equal(int16[0], -32768); // Clamped minimum
+  assert.equal(int16[1], -32768);
+  assert.equal(int16[2], 0);
+  assert.equal(int16[3], 32767);
+  assert.equal(int16[4], 32767); // Clamped maximum
+});
+
+test("formatTimeDisplay formats duration correctly", () => {
+  assert.equal(formatTimeDisplay(0), "00:00");
+  assert.equal(formatTimeDisplay(45), "00:45");
+  assert.equal(formatTimeDisplay(75), "01:15");
+  assert.equal(formatTimeDisplay(3665), "01:01:05");
+});
+
+test("formatAudioFileSize formats bytes to human-readable string", () => {
+  assert.equal(formatAudioFileSize(500), "500.0 B");
+  assert.equal(formatAudioFileSize(2048), "2.0 KB");
+  assert.equal(formatAudioFileSize(5242880), "5.00 MB");
+});
+
+// === Audio to Transcript & Subtitles ===
+test("formatSrtTimestamp formats seconds with comma separator", () => {
+  assert.equal(formatSrtTimestamp(0), "00:00:00,000");
+  assert.equal(formatSrtTimestamp(1.234), "00:00:01,234");
+  assert.equal(formatSrtTimestamp(65.5), "00:01:05,500");
+  assert.equal(formatSrtTimestamp(3661.05), "01:01:01,050");
+});
+
+test("formatVttTimestamp formats seconds with dot separator", () => {
+  assert.equal(formatVttTimestamp(0), "00:00:00.000");
+  assert.equal(formatVttTimestamp(1.234), "00:00:01.234");
+  assert.equal(formatVttTimestamp(3661.05), "01:01:01.050");
+});
+
+test("parseTimestamp parses various timestamp formats accurately", () => {
+  assert.equal(parseTimestamp("00:01:23,456"), 83.456);
+  assert.equal(parseTimestamp("00:01:23.456"), 83.456);
+  assert.equal(parseTimestamp("01:23.5"), 83.5);
+  assert.equal(parseTimestamp("15"), 15);
+  assert.equal(parseTimestamp(""), 0);
+});
+
+test("generateSrt creates valid SubRip format with Bengali and English text", () => {
+  const cues = [
+    { id: "1", start: 1.0, end: 4.5, text: "স্বাগতম আমাদের ভিডিওতে" },
+    { id: "2", start: 5.0, end: 8.2, text: "Welcome to our video" },
+  ];
+
+  const srt = generateSrt(cues);
+  assert.match(srt, /1\n00:00:01,000 --> 00:00:04,500\nস্বাগতম আমাদের ভিডিওতে/);
+  assert.match(srt, /2\n00:00:05,000 --> 00:00:08,200\nWelcome to our video/);
+});
+
+test("generateVtt creates valid WebVTT format with WEBVTT header", () => {
+  const cues = [
+    { id: "1", start: 0.5, end: 3.0, text: "বাংলা সাবটাইটেল" },
+  ];
+
+  const vtt = generateVtt(cues);
+  assert.ok(vtt.startsWith("WEBVTT\n\n"));
+  assert.match(vtt, /00:00:00\.500 --> 00:00:03\.000\nবাংলা সাবটাইটেল/);
+});
+
+test("generateTxt outputs timestamped or plain text transcripts", () => {
+  const cues = [
+    { id: "1", start: 0, end: 5, text: "First line" },
+    { id: "2", start: 5, end: 10, text: "Second line" },
+  ];
+
+  const plain = generateTxt(cues, false);
+  assert.equal(plain, "First line\nSecond line");
+
+  const timestamped = generateTxt(cues, true);
+  assert.equal(timestamped, "[00:00 - 00:05] First line\n[00:05 - 00:10] Second line");
+});
+
+test("generateJson produces parseable JSON with metadata", () => {
+  const cues = [
+    { id: "cue-1", start: 2.5, end: 6.0, text: "টেস্টিং ট্রান্সক্রিপ্ট" },
+  ];
+
+  const jsonStr = generateJson(cues);
+  const parsed = JSON.parse(jsonStr);
+  assert.equal(parsed.length, 1);
+  assert.equal(parsed[0].id, "cue-1");
+  assert.equal(parsed[0].text, "টেস্টিং ট্রান্সক্রিপ্ট");
+  assert.equal(parsed[0].duration, 3.5);
+});
+
+test("generateCsv formats rows and escapes double quotes", () => {
+  const cues = [
+    { id: "1", start: 1, end: 3, text: 'He said "Hello" to everyone' },
+  ];
+
+  const csv = generateCsv(cues);
+  assert.match(csv, /Index,Start Time,End Time/);
+  assert.match(csv, /"He said ""Hello"" to everyone"/);
+});
+
+test("parseSrt accurately parses SRT content into SubtitleCue array", () => {
+  const srtContent = `1
+00:00:01,200 --> 00:00:04,800
+প্রথম বাংলা বাক্য
+
+2
+00:00:05,100 --> 00:00:08,900
+Second English sentence
+`;
+
+  const cues = parseSrt(srtContent);
+  assert.equal(cues.length, 2);
+  assert.equal(cues[0].start, 1.2);
+  assert.equal(cues[0].end, 4.8);
+  assert.equal(cues[0].text, "প্রথম বাংলা বাক্য");
+  assert.equal(cues[1].text, "Second English sentence");
+});
+
+test("parseVtt accurately parses WebVTT content into SubtitleCue array", () => {
+  const vttContent = `WEBVTT
+
+00:00:02.500 --> 00:00:06.000
+WebVTT বাংলা ক্যাপশন
+`;
+
+  const cues = parseVtt(vttContent);
+  assert.equal(cues.length, 1);
+  assert.equal(cues[0].start, 2.5);
+  assert.equal(cues[0].end, 6.0);
+  assert.equal(cues[0].text, "WebVTT বাংলা ক্যাপশন");
+});
+
+test("mapWhisperResponseToCues maps verbose segments and falls back to sentences", () => {
+  const withSegments = {
+    text: "Hello world",
+    segments: [
+      { id: 1, start: 0.2, end: 2.1, text: "Hello" },
+      { id: 2, start: 2.2, end: 4.5, text: "world" },
+    ],
+  };
+  const cues = mapWhisperResponseToCues(withSegments);
+  assert.equal(cues.length, 2);
+  assert.equal(cues[0].text, "Hello");
+  assert.equal(cues[1].text, "world");
+
+  // Fallback sentence splitting
+  const withoutSegments = {
+    text: "প্রথম বাক্য। দ্বিতীয় বাক্য!",
+  };
+  const fallbackCues = mapWhisperResponseToCues(withoutSegments);
+  assert.equal(fallbackCues.length, 2);
+  assert.equal(fallbackCues[0].text, "প্রথম বাক্য।");
+  assert.equal(fallbackCues[1].text, "দ্বিতীয় বাক্য!");
+});
+
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);
 if (passed !== total) process.exit(1);
+

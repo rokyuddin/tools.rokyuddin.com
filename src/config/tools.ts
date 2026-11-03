@@ -4,7 +4,8 @@ export type ToolCategory =
   | "Bangladesh"
   | "Developer"
   | "General"
-  | "Documents";
+  | "Documents"
+  | "Audio & Video";
 
 export interface ToolFaq {
   question: string;
@@ -1459,6 +1460,166 @@ export const toolsRegistry: ToolDefinition[] = [
       },
     ],
     relatedToolSlugs: ["image-compressor", "social-resizer", "blur-image"],
+  },
+  {
+    slug: "video-to-audio",
+    name: "Video to Audio Extractor & Converter",
+    tagline:
+      "Extract high-quality audio from any video online in MP3, WAV, AAC, M4A, or OGG",
+    description:
+      "Easily extract audio tracks from MP4, WebM, MOV, and MKV videos directly inside your browser. 100% private, zero server uploads, with custom bitrate control, audio trimming, and instant downloads.",
+    category: "Audio & Video",
+    popular: true,
+    isNew: true,
+    badges: [
+      "100% In-Browser",
+      "MP3, WAV, AAC & OGG",
+      "Bitrate Control",
+      "Audio Trimming",
+      "Zero Server Uploads",
+    ],
+    keywords: [
+      "video to audio",
+      "extract audio from video",
+      "convert video to mp3",
+      "mp4 to mp3 online",
+      "video to wav converter",
+      "extract mp3 from mp4",
+      "rip audio from video free",
+      "browser audio extractor",
+    ],
+    features: [
+      "Fast client-side audio track extraction using the native Web Audio API",
+      "Multiple popular output formats: MP3, uncompressed lossless WAV, AAC / M4A, and OGG / WebM Opus",
+      "Configurable MP3 bitrate quality presets: 128 kbps, 192 kbps, 256 kbps, and 320 kbps",
+      "Built-in interactive video preview player and extracted audio player",
+      "Audio range trimming to extract full duration or a specific time snippet",
+      "100% private: video processing runs entirely on your device with no server uploads",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Upload Your Video",
+        description:
+          "Drop or select any video file (MP4, WebM, MOV, MKV, AVI) from your device.",
+      },
+      {
+        step: 2,
+        title: "Select Format & Bitrate",
+        description:
+          "Pick your preferred audio format (MP3, WAV, AAC, or OGG) and optional bitrate or trim range.",
+      },
+      {
+        step: 3,
+        title: "Extract & Download",
+        description:
+          "Preview the extracted audio in the built-in player and click Download to save your audio file.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Is my video uploaded to any server?",
+        answer:
+          "No. All audio decoding and encoding happens 100% locally in your browser using the Web Audio API. Your video never leaves your computer or phone.",
+      },
+      {
+        question: "What video formats are supported?",
+        answer:
+          "You can extract audio from MP4, WebM, MOV, MKV, AVI, FLV, and other standard video formats supported by modern browsers.",
+      },
+      {
+        question: "Which audio format should I choose?",
+        answer:
+          "Choose MP3 for universal compatibility across all phones and music players, WAV for lossless master audio quality, or OGG/WebM for high compression efficiency.",
+      },
+      {
+        question: "Can I extract only a portion of the video?",
+        answer:
+          "Yes! Use the optional trim controls to set a custom start and end time to extract only the segment you need.",
+      },
+    ],
+    relatedToolSlugs: ["audio-to-transcript", "reels-downloader", "file-size-increaser"],
+  },
+  {
+    slug: "audio-to-transcript",
+    name: "Audio & Video Transcript Generator with Timestamps",
+    tagline:
+      "Generate timestamped transcripts & subtitles for Bangla and English with video sync",
+    description:
+      "Transcribe audio and video recordings into accurate, timestamped captions. Focused on Bangla (বাংলা) and English with a synchronized video subtitle player, inline caption editor, and downloads in SRT, VTT, TXT, JSON, and CSV.",
+    category: "Audio & Video",
+    popular: true,
+    isNew: true,
+    badges: [
+      "Bangla & English Focus",
+      "SRT, VTT, TXT & JSON",
+      "Synced Video Player",
+      "Live Caption Editor",
+      "100% In-Browser",
+    ],
+    keywords: [
+      "audio to transcript",
+      "audio transcription with timestamp",
+      "bangla speech to text",
+      "bangla audio to text",
+      "generate srt subtitles",
+      "video subtitle generator",
+      "bangla subtitle generator",
+      "audio to vtt converter",
+      "english bangla transcription",
+    ],
+    features: [
+      "Dedicated bilingual speech recognition optimized for Bangla (বাংলা - Bangladesh/India) and English (US/UK/Global)",
+      "Supports both direct Audio upload (MP3, WAV, M4A, OGG) and Video upload (MP4, WebM, MOV)",
+      "Synchronized video player with live real-time subtitle overlay and click-to-seek navigation",
+      "Interactive transcript editor with timestamp adjustment (+0.5s / -0.5s), cue splitting, merging, and search & replace",
+      "Export to industry-standard formats: SubRip (.srt), WebVTT (.vtt), Timestamped Text (.txt), Plain Text (.txt), JSON, and CSV",
+      "Import existing subtitle files (.srt, .vtt) to edit, adjust timings, and preview with your video",
+      "100% private in-browser execution with optional AI Whisper acceleration",
+    ],
+    howItWorks: [
+      {
+        step: 1,
+        title: "Load Media & Select Language",
+        description:
+          "Upload your audio or video file and choose your target language (Bangla or English).",
+      },
+      {
+        step: 2,
+        title: "Generate or Edit Transcripts",
+        description:
+          "Run the transcription engine, import an existing subtitle file, or tap timestamps as the media plays.",
+      },
+      {
+        step: 3,
+        title: "Sync & Export",
+        description:
+          "Review live captions on the synchronized video player, edit cues inline, and download as SRT, VTT, TXT, JSON, or CSV.",
+      },
+    ],
+    faqs: [
+      {
+        question: "How accurate is the transcription for Bangla (বাংলা)?",
+        answer:
+          "Our system is specifically calibrated for Bengali phonetic nuances and colloquial phrasing across both Bangladeshi (bn-BD) and Indian (bn-IN) accents, producing clean Unicode Bengali script.",
+      },
+      {
+        question: "Can I download subtitles in SRT or VTT format for YouTube and Reels?",
+        answer:
+          "Yes! Both .srt and .vtt formats include standard millisecond timestamps and are 100% compatible with YouTube, Facebook, Instagram Reels, TikTok, Premiere Pro, and VLC.",
+      },
+      {
+        question: "Can I edit the timestamps and text before downloading?",
+        answer:
+          "Absolutely. The built-in interactive editor allows you to tweak text, adjust start/end timings, split or merge segments, and preview changes on the video in real time.",
+      },
+      {
+        question: "Are my audio and video files kept private?",
+        answer:
+          "Yes, completely. Files are processed locally on your device without being uploaded to remote servers.",
+      },
+    ],
+    relatedToolSlugs: ["video-to-audio", "reels-downloader", "text-cleaner"],
   },
 ];
 

@@ -85,3 +85,48 @@ _Avoid_: Final meme, rendered meme
 **Export Format**:
 The output encoding (`PNG`, `JPG`, or `WebP`) chosen for the Meme Output.
 _Avoid_: Save as type, file type
+
+### Video to Audio Extractor
+
+**Source Video**:
+The video file (MP4, WebM, MOV, or MKV) uploaded by the user from which the audio track is extracted.
+_Avoid_: Input clip, raw video
+
+**Audio Track**:
+The decoded multi-channel PCM audio stream extracted from the Source Video.
+_Avoid_: Sound data, audio stream
+
+**Audio Bitrate**:
+The data transfer rate in kbps (128, 192, 256, or 320 kbps) for compressed MP3 encoding.
+_Avoid_: Audio quality rate, sound speed
+
+**Trim Range**:
+The specified start and end timestamps restricting extraction to a sub-segment of the Source Video.
+_Avoid_: Crop range, cut window
+
+**Extracted Audio**:
+The final encoded audio file (MP3, WAV, AAC, or OGG) generated for user download.
+_Avoid_: Rendered audio, ripped sound
+
+### Audio to Transcript & Subtitle Generator
+
+**Source Media**:
+The audio or video file uploaded by the user to be transcribed.
+_Avoid_: Raw recording, input speech
+
+**Subtitle Cue**:
+A discrete timestamped segment containing an identifier, start timestamp, end timestamp, and caption text.
+_Avoid_: Subtitle row, caption item, timeblock
+
+**Active Cue**:
+The specific Subtitle Cue whose start and end window matches the current media playback timestamp.
+_Avoid_: Current caption, highlighted subtitle
+
+**Subtitle Format**:
+The target file standard (`SRT`, `WebVTT`, `TXT`, `JSON`, or `CSV`) chosen for export.
+_Avoid_: Subtitle type, caption extension
+
+**Language Dialect**:
+The specific phonetic speech recognition dialect selected for transcription (`bn-BD`, `bn-IN`, `en-US`, `en-GB`, or `en-IN`).
+_Avoid_: Accent choice, voice locale
+
