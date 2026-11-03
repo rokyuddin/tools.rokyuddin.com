@@ -33,7 +33,15 @@ export async function transcribeWithOpenRouter(
     throw new Error(errorMsg);
   }
 
-  const data: WhisperApiResponse = await res.json();
+  const data = await res.json();
+  if (Array.isArray(data.cues) && data.cues.length > 0) {
+    return data.cues.map((c: any, idx: number) => ({
+      id: c.id || `cue-${idx + 1}`,
+      start: typeof c.start === "number" ? Number(c.start.toFixed(3)) : 0,
+      end: typeof c.end === "number" ? Number(c.end.toFixed(3)) : 3,
+      text: String(c.text || "").trim(),
+    }));
+  }
   return mapWhisperResponseToCues(data);
 }
 

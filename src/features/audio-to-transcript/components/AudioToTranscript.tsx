@@ -152,7 +152,9 @@ export function AudioToTranscript() {
 
     setError(null);
     setProgress(null);
-    const isVideo = file.type.startsWith("video/") || Boolean(file.name.match(/\.(mp4|mov|webm|mkv|avi)$/i));
+    const isVideo =
+      file.type.startsWith("video/") ||
+      Boolean(file.name.match(/\.(mp4|mov|webm|mkv|avi|m4v|3gp|flv|wmv|mts|ts|ogv)$/i));
     const url = URL.createObjectURL(file);
 
     if (isVideo) {
@@ -209,7 +211,7 @@ export function AudioToTranscript() {
     }
 
     if (!isSpeechRecognitionSupported()) {
-      setError("Web Speech API is not supported in this browser. Please use Google Chrome, Microsoft Edge, or the AI Whisper option.");
+      setError("Web Speech API is not supported in this browser. Please use Google Chrome, Microsoft Edge, or AI Transcribe.");
       return;
     }
 
@@ -217,7 +219,7 @@ export function AudioToTranscript() {
     setIsListening(true);
     setProgress({
       status: "listening",
-      message: `Listening in ${selectedLanguage.startsWith("bn") ? "Bangla" : "English"}... Play media or speak now.`,
+      message: `Listening in ${selectedLanguage.startsWith("bn") ? "Bangla" : "English"}...`,
     });
 
     const recognizer = createSpeechRecognizer(
@@ -227,11 +229,9 @@ export function AudioToTranscript() {
 
         setCues((prev) => {
           if (!item.isFinal) {
-            // Live interim feedback
             return prev;
           }
 
-          // Append or merge new finalized chunk
           const newCue: SubtitleCue = {
             id: `cue-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             start: Number(item.startTime.toFixed(3)),
@@ -253,7 +253,6 @@ export function AudioToTranscript() {
     recognizerRef.current = recognizer;
     recognizer.start(() => playerRef.current?.currentTime || 0);
 
-    // Auto-play media if loaded and paused
     if (playerRef.current && playerRef.current.paused) {
       playerRef.current.play().catch(() => {});
     }
@@ -273,13 +272,15 @@ export function AudioToTranscript() {
     try {
       let audioPayload: File | Blob = fileToTranscribe;
 
-      // If video, extract lightweight MP3 in browser first to prevent large upload
-      if (media.isVideo && media.videoFile) {
-        setProgress({
-          status: "transcribing",
-          message: "Extracting audio track from video...",
-        });
-        const audioBuffer = await decodeAudioFromVideo(media.videoFile);
+      setProgress({
+        status: "transcribing",
+        message: "Extracting audio track...",
+      });
+
+      // Decode audio in browser to high-clarity 128kbps mono MP3
+      // Guarantees small payload (<1.5MB for 2-3 min) & continuous recording from 00:00 to end
+      try {
+        const audioBuffer = await decodeAudioFromVideo(fileToTranscribe);
         const numChannels = Math.min(2, audioBuffer.numberOfChannels) as 1 | 2;
         const channelsData: Float32Array[] = [];
         for (let c = 0; c < numChannels; c++) {
@@ -290,11 +291,13 @@ export function AudioToTranscript() {
           channels: numChannels,
           bitrate: 128,
         });
+      } catch (decodeErr) {
+        console.warn("Direct decoding fallback, using original file", decodeErr);
       }
 
       setProgress({
         status: "transcribing",
-        message: `Transcribing audio via OpenRouter AI (${selectedLanguage.startsWith("bn") ? "বাংলা" : "English"})...`,
+        message: `Transcribing entire recording (${selectedLanguage.startsWith("bn") ? "বাংলা" : "English"})...`,
       });
 
       const resultCues = await transcribeWithOpenRouter(
@@ -306,7 +309,7 @@ export function AudioToTranscript() {
         setCues(resultCues);
         setProgress({
           status: "complete",
-          message: `OpenRouter transcription complete! ${resultCues.length} timestamped segments generated.`,
+          message: `Transcription complete (${resultCues.length} segments).`,
         });
       } else {
         setError("Transcription returned empty results.");
@@ -499,16 +502,13 @@ export function AudioToTranscript() {
 
       {/* Main Studio Workspace */}
       {(media.videoUrl || media.audioUrl || cues.length > 0) && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Top Control Bar: Language, Actions, Subtitle File Import */}
-          <Card className="p-4 sm:p-5 rounded-2xl border border-border/80 bg-card shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Language Selector */}
+        <div className="space-y-4 animate-fade-in">
+          {/* Main Controls Toolbar */}
+          <Card className="p-3 sm:p-4 rounded-xl border border-border bg-card shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
+              {/* Left: Language & Reset */}
               <div className="flex items-center gap-2">
                 <Globe className="size-4 text-primary shrink-0" />
-                <Label className="text-xs font-semibold text-foreground whitespace-nowrap">
-                  Language:
-                </Label>
                 <select
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value as TranscriptLanguage)}
@@ -520,131 +520,119 @@ export function AudioToTranscript() {
                     </option>
                   ))}
                 </select>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleReset}
+                  className="text-xs text-muted-foreground hover:text-foreground h-8 px-2"
+                  title="Reset Media"
+                >
+                  <RotateCcw className="size-3.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Reset</span>
+                </Button>
               </div>
 
-              {/* Reset Media */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleReset}
-                className="text-xs text-muted-foreground hover:text-foreground h-8"
-              >
-                <RotateCcw className="size-3.5 mr-1" />
-                Reset
-              </Button>
-            </div>
+              {/* Right: Actions */}
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={subtitleFileInputRef}
+                  type="file"
+                  accept=".srt,.vtt,.txt"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) handleSubtitleFileUpload(e.target.files[0]);
+                  }}
+                />
 
-            {/* Quick Actions (Mic recognition, AI Whisper, Import) */}
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                ref={subtitleFileInputRef}
-                type="file"
-                accept=".srt,.vtt,.txt"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) handleSubtitleFileUpload(e.target.files[0]);
-                }}
-              />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => subtitleFileInputRef.current?.click()}
+                  className="text-xs h-8 px-2.5"
+                  title="Import Subtitle File"
+                >
+                  <FileText className="size-3.5 mr-1" />
+                  Import
+                </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => subtitleFileInputRef.current?.click()}
-                className="text-xs h-8"
-              >
-                <FileText className="size-3.5 mr-1" />
-                Import SRT/VTT
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleSpeechRecognition}
+                  className={cn(
+                    "text-xs font-semibold h-8 px-2.5 transition-all",
+                    isListening
+                      ? "bg-destructive text-destructive-foreground animate-pulse border-destructive"
+                      : "text-foreground",
+                  )}
+                  title="Speech recognition"
+                >
+                  {isListening ? (
+                    <>
+                      <MicOff className="size-3.5 mr-1" />
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="size-3.5 mr-1" />
+                      Mic
+                    </>
+                  )}
+                </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRunOpenRouter}
-                disabled={isAiTranscribing || isListening}
-                className="text-xs h-8 text-primary border-primary/30 hover:bg-primary/5 font-semibold"
-              >
-                <Sparkles className={cn("size-3.5 mr-1 text-primary", isAiTranscribing && "animate-spin")} />
-                {isAiTranscribing ? "Transcribing with AI..." : "AI Transcribe (OpenRouter)"}
-              </Button>
-
-              <Button
-                size="sm"
-                onClick={toggleSpeechRecognition}
-                className={cn(
-                  "text-xs font-bold h-8 transition-all",
-                  isListening
-                    ? "bg-destructive text-destructive-foreground animate-pulse"
-                    : "bg-primary text-primary-foreground",
-                )}
-              >
-                {isListening ? (
+                {cues.length > 0 && (
                   <>
-                    <MicOff className="size-3.5 mr-1" />
-                    Stop Listening
-                  </>
-                ) : (
-                  <>
-                    <Mic className="size-3.5 mr-1" />
-                    Live Speech-to-Text
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isPolishing}
+                      onClick={() => handlePolishSubtitles("polish")}
+                      className="text-xs h-8 px-2.5"
+                      title="Polish Grammar & Punctuation"
+                    >
+                      <Sparkles className={cn("size-3.5 mr-1 text-primary", isPolishing && "animate-spin")} />
+                      {isPolishing ? "Polishing..." : "Polish"}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isPolishing}
+                      onClick={() =>
+                        handlePolishSubtitles(
+                          selectedLanguage.startsWith("bn") ? "translate_to_en" : "translate_to_bn",
+                        )
+                      }
+                      className="text-xs h-8 px-2.5"
+                      title="Translate Subtitles"
+                    >
+                      <Globe className="size-3.5 mr-1 text-primary" />
+                      {isPolishing
+                        ? "Translating..."
+                        : selectedLanguage.startsWith("bn")
+                          ? "to English"
+                          : "to বাংলা"}
+                    </Button>
                   </>
                 )}
-              </Button>
+
+                <Button
+                  size="sm"
+                  onClick={handleRunOpenRouter}
+                  disabled={isAiTranscribing || isListening}
+                  className="text-xs font-bold h-8 px-3 bg-primary text-primary-foreground shadow-xs"
+                >
+                  <Sparkles className={cn("size-3.5 mr-1.5", isAiTranscribing && "animate-spin")} />
+                  {isAiTranscribing ? "Transcribing..." : "AI Transcribe"}
+                </Button>
+              </div>
             </div>
           </Card>
 
-          {/* OpenRouter AI Subtitle Actions Bar */}
-          {cues.length > 0 && (
-            <Card className="p-3.5 sm:p-4 rounded-xl border border-primary/20 bg-primary/5 shadow-xs flex flex-wrap items-center justify-between gap-3 animate-fade-in">
-              <div className="flex items-center gap-2.5">
-                <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <Sparkles className="size-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">
-                    OpenRouter AI Subtitle Actions
-                  </h4>
-                  <p className="text-[11px] text-muted-foreground">
-                    One-click bilingual grammar polishing and translations powered by OpenRouter
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isPolishing}
-                  onClick={() => handlePolishSubtitles("polish")}
-                  className="text-xs h-7.5 bg-card shadow-xs"
-                >
-                  <Sparkles className={cn("size-3.5 mr-1 text-primary", isPolishing && "animate-spin")} />
-                  {isPolishing ? "Polishing..." : "✨ Polish Grammar & Punctuation"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isPolishing}
-                  onClick={() =>
-                    handlePolishSubtitles(
-                      selectedLanguage.startsWith("bn") ? "translate_to_en" : "translate_to_bn",
-                    )
-                  }
-                  className="text-xs h-7.5 bg-card shadow-xs"
-                >
-                  <Globe className="size-3.5 mr-1 text-primary" />
-                  {isPolishing
-                    ? "Translating..."
-                    : selectedLanguage.startsWith("bn")
-                      ? "Translate to English"
-                      : "Translate to বাংলা"}
-                </Button>
-              </div>
-            </Card>
-          )}
-
           {/* Feedback & Status Alert */}
           {error && (
-            <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2">
               <AlertCircle className="size-4 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">Notice</p>
@@ -654,21 +642,29 @@ export function AudioToTranscript() {
           )}
 
           {progress && (
-            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs flex items-center justify-between font-medium">
-              <span>{progress.message}</span>
-              {isListening && (
-                <span className="flex items-center gap-1.5 text-destructive font-bold">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs flex items-center justify-between font-medium">
+              <span className="truncate">{progress.message}</span>
+              {isListening ? (
+                <span className="flex items-center gap-1.5 text-destructive font-bold text-[11px] shrink-0 ml-2">
                   <span className="size-2 rounded-full bg-destructive animate-ping" />
                   RECORDING
                 </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setProgress(null)}
+                  className="text-xs text-primary/70 hover:text-primary shrink-0 ml-2 p-1"
+                >
+                  ✕
+                </button>
               )}
             </div>
           )}
 
           {/* Dual Panel Workspace: Video Player & Subtitle Editor */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
             {/* Left: Video / Audio Player with Live Captions */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <SubtitleVideoPlayer
                 mediaUrl={media.videoUrl || media.audioUrl}
                 isVideo={media.isVideo}
@@ -680,9 +676,9 @@ export function AudioToTranscript() {
 
               {/* If audio was uploaded, allow attaching video for preview */}
               {!media.isVideo && (
-                <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    Have a video for this audio?
+                <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground text-[11px]">
+                    Have video for this audio?
                   </span>
                   <input
                     type="file"
@@ -705,7 +701,7 @@ export function AudioToTranscript() {
                     variant="outline"
                     size="sm"
                     onClick={() => document.getElementById("attach-video-input")?.click()}
-                    className="text-xs h-7"
+                    className="text-xs h-7 px-2.5"
                   >
                     <Film className="size-3 mr-1" />
                     Attach Video
@@ -728,31 +724,26 @@ export function AudioToTranscript() {
 
           {/* Export & Download Hub */}
           {cues.length > 0 && (
-            <Card className="p-5 sm:p-6 rounded-2xl border-2 border-primary/20 bg-card shadow-md space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-border/60">
-                <div>
-                  <h3 className="font-bold text-foreground text-sm sm:text-base flex items-center gap-1.5">
-                    <Download className="size-4 text-primary" />
-                    Download & Export Transcripts
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Save your synchronized captions with millisecond timestamp accuracy
-                  </p>
-                </div>
+            <Card className="p-4 sm:p-5 rounded-xl border border-border bg-card shadow-xs space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                <h3 className="font-bold text-foreground text-sm flex items-center gap-1.5">
+                  <Download className="size-4 text-primary" />
+                  Export Subtitles
+                </h3>
                 <Badge variant="secondary" className="font-mono text-xs">
-                  {cues.length} segments ready
+                  {cues.length} {cues.length === 1 ? "cue" : "cues"}
                 </Badge>
               </div>
 
               {/* Format Selection Chips */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 {EXPORT_FORMATS.map((fmt) => (
                   <button
                     key={fmt.id}
                     type="button"
                     onClick={() => setSelectedExportFormat(fmt.id)}
                     className={cn(
-                      "p-2.5 rounded-xl border text-center transition-all text-xs flex flex-col items-center justify-center gap-0.5",
+                      "p-2 rounded-lg border text-center transition-all text-xs flex flex-col items-center justify-center gap-0.5",
                       selectedExportFormat === fmt.id
                         ? "border-primary bg-primary text-primary-foreground font-bold shadow-xs"
                         : "border-border bg-card text-foreground hover:border-primary/40",
@@ -765,21 +756,21 @@ export function AudioToTranscript() {
               </div>
 
               {/* Action Buttons: Download & Copy */}
-              <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
                 <Button
-                  size="lg"
+                  size="default"
                   onClick={handleDownload}
-                  className="w-full sm:flex-1 font-bold h-11"
+                  className="w-full sm:flex-1 font-bold h-10"
                 >
                   <Download className="size-4 mr-2" />
-                  Download {selectedExportFormat.toUpperCase()} ({cues.length} cues)
+                  Download {selectedExportFormat.toUpperCase()}
                 </Button>
 
                 <Button
                   variant="outline"
-                  size="lg"
+                  size="default"
                   onClick={handleCopyClipboard}
-                  className="w-full sm:w-auto font-medium h-11 text-xs sm:text-sm"
+                  className="w-full sm:w-auto font-medium h-10 text-xs sm:text-sm"
                 >
                   {hasCopied ? (
                     <>

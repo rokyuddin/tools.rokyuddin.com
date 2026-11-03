@@ -106,7 +106,7 @@ export function SubtitleVideoPlayer({
             className="w-full h-full object-contain cursor-pointer"
           />
         ) : (
-          <div className="flex flex-col items-center justify-center p-8 text-center text-zinc-400">
+          <div className="flex flex-col items-center justify-center p-6 text-center text-zinc-400">
             <audio
               ref={playerRef as React.RefObject<HTMLAudioElement>}
               src={mediaUrl}
@@ -115,11 +115,11 @@ export function SubtitleVideoPlayer({
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             />
-            <div className="size-16 rounded-2xl bg-primary/20 text-primary flex items-center justify-center mb-3">
-              <Music className="size-8" />
+            <div className="size-12 rounded-xl bg-primary/20 text-primary flex items-center justify-center mb-2">
+              <Music className="size-6" />
             </div>
-            <p className="text-sm font-medium text-zinc-200">Audio Track Loaded</p>
-            <p className="text-xs text-zinc-500 font-mono mt-1">
+            <p className="text-xs font-semibold text-zinc-200">Audio Track</p>
+            <p className="text-[11px] text-zinc-500 font-mono mt-0.5">
               {formatDisplayTimestamp(currentTime)} / {formatDisplayTimestamp(duration)}
             </p>
           </div>

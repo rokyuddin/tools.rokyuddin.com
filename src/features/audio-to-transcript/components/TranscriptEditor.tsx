@@ -140,27 +140,28 @@ export function TranscriptEditor({
   };
 
   return (
-    <Card className="p-4 sm:p-5 rounded-2xl border border-border/80 bg-card shadow-xs flex flex-col h-[520px]">
+    <Card className="p-3.5 sm:p-4 rounded-xl border border-border bg-card shadow-xs flex flex-col min-h-[400px] h-[480px] lg:h-[500px]">
       {/* Header Bar */}
-      <div className="flex items-center justify-between pb-3 border-b border-border/60 shrink-0">
+      <div className="flex items-center justify-between pb-2.5 border-b border-border/60 shrink-0">
         <div className="flex items-center gap-2">
-          <Label className="text-sm font-bold text-foreground">
-            Subtitle Cues
+          <Label className="text-xs sm:text-sm font-bold text-foreground">
+            Cues
           </Label>
           <Badge variant="secondary" className="text-xs font-mono font-semibold">
-            {cues.length} {cues.length === 1 ? "segment" : "segments"}
+            {cues.length}
           </Badge>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowSearchReplace(!showSearchReplace)}
             className="text-xs h-7 px-2 text-muted-foreground hover:text-foreground"
+            title="Find & Replace"
           >
-            <Search className="size-3 mr-1" />
-            Find & Replace
+            <Search className="size-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Find</span>
           </Button>
 
           <Button
@@ -169,20 +170,21 @@ export function TranscriptEditor({
             onClick={() => setAutoScroll(!autoScroll)}
             className={cn(
               "text-xs h-7 px-2",
-              autoScroll ? "text-primary border-primary/30 bg-primary/5" : "text-muted-foreground",
+              autoScroll ? "text-primary border-primary/30 bg-primary/5 font-semibold" : "text-muted-foreground",
             )}
+            title="Auto-scroll to active cue"
           >
-            Auto-scroll: {autoScroll ? "On" : "Off"}
+            <span className="text-[11px]">Auto-scroll</span>
           </Button>
 
           <Button
             variant="default"
             size="sm"
             onClick={() => handleAddCue(cues.length - 1)}
-            className="text-xs h-7 px-2 font-medium"
+            className="text-xs h-7 px-2.5 font-semibold"
           >
-            <Plus className="size-3 mr-1" />
-            Add Cue
+            <Plus className="size-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Add Cue</span>
           </Button>
         </div>
       </div>
@@ -235,16 +237,16 @@ export function TranscriptEditor({
                 key={cue.id}
                 ref={isActive ? activeItemRef : null}
                 className={cn(
-                  "p-3 rounded-xl border transition-all duration-150 flex flex-col gap-2 relative group",
+                  "p-2.5 sm:p-3 rounded-xl border transition-all duration-150 flex flex-col gap-2 relative group",
                   isActive
                     ? "border-primary bg-primary/5 shadow-xs ring-1 ring-primary/40"
                     : "border-border/70 hover:border-border hover:bg-muted/20",
                 )}
               >
                 {/* Cue Header with Timestamps & Controls */}
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 font-mono text-muted-foreground">
-                    <span className="font-bold text-foreground/80 min-w-5">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs">
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="font-bold text-muted-foreground text-[11px] min-w-4">
                       #{idx + 1}
                     </span>
 
@@ -252,23 +254,21 @@ export function TranscriptEditor({
                     <button
                       type="button"
                       onClick={() => onSeek(cue.start)}
-                      className="p-1 rounded-md hover:bg-primary/20 text-primary transition-colors flex items-center gap-1"
+                      className="px-1.5 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors flex items-center gap-1 font-semibold text-[11px]"
                       title="Jump to this segment in media"
                     >
-                      <Play className="size-3 fill-current" />
-                      <span className="font-semibold text-primary">
-                        {formatDisplayTimestamp(cue.start)}
+                      <Play className="size-2.5 fill-current" />
+                      <span>
+                        {formatDisplayTimestamp(cue.start)} - {formatDisplayTimestamp(cue.end)}
                       </span>
                     </button>
-                    <span>→</span>
-                    <span>{formatDisplayTimestamp(cue.end)}</span>
 
                     {/* Nudge Buttons */}
-                    <div className="hidden sm:flex items-center gap-1 ml-2 text-[10px]">
+                    <div className="flex items-center gap-0.5 text-[10px]">
                       <button
                         type="button"
                         onClick={() => handleNudge(cue.id, -0.5)}
-                        className="px-1.5 py-0.5 rounded bg-muted hover:bg-muted-foreground/20 text-muted-foreground font-mono"
+                        className="px-1 py-0.5 rounded bg-muted hover:bg-muted-foreground/20 text-muted-foreground font-mono"
                         title="Shift 0.5s earlier"
                       >
                         -0.5s
@@ -276,7 +276,7 @@ export function TranscriptEditor({
                       <button
                         type="button"
                         onClick={() => handleNudge(cue.id, 0.5)}
-                        className="px-1.5 py-0.5 rounded bg-muted hover:bg-muted-foreground/20 text-muted-foreground font-mono"
+                        className="px-1 py-0.5 rounded bg-muted hover:bg-muted-foreground/20 text-muted-foreground font-mono"
                         title="Shift 0.5s later"
                       >
                         +0.5s
@@ -285,7 +285,7 @@ export function TranscriptEditor({
                   </div>
 
                   {/* Actions (Merge, Add below, Delete) */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 ml-auto">
                     {idx < cues.length - 1 && (
                       <button
                         type="button"
@@ -302,7 +302,7 @@ export function TranscriptEditor({
                       className="p-1 text-muted-foreground hover:text-primary rounded"
                       title="Add cue below"
                     >
-                      <Plus className="size-3" />
+                      <Plus className="size-3.5" />
                     </button>
                     <button
                       type="button"
@@ -310,7 +310,7 @@ export function TranscriptEditor({
                       className="p-1 text-muted-foreground hover:text-destructive rounded"
                       title="Delete this cue"
                     >
-                      <Trash2 className="size-3" />
+                      <Trash2 className="size-3.5" />
                     </button>
                   </div>
                 </div>
@@ -321,7 +321,7 @@ export function TranscriptEditor({
                   value={cue.text}
                   onChange={(e) => handleTextChange(cue.id, e.target.value)}
                   placeholder="Enter caption text (বাংলা বা English)..."
-                  className="w-full bg-transparent resize-none text-xs sm:text-sm text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary/40 rounded-md p-1 border border-transparent hover:border-border/60 transition-colors leading-relaxed"
+                  className="w-full bg-muted/20 hover:bg-muted/40 focus:bg-background resize-none text-xs sm:text-sm text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary/40 rounded-lg p-2 border border-border/40 hover:border-border transition-colors leading-relaxed"
                 />
               </div>
             );

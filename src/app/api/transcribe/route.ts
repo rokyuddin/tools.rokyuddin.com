@@ -114,11 +114,90 @@ export async function POST(req: Request) {
       );
     }
 
+    const arrayBuffer = await file.arrayBuffer();
+    const base64Audio = Buffer.from(arrayBuffer).toString("base64");
+    const mimeType = file.type || "audio/mp3";
+    const audioFormat = mimeType.includes("wav") ? "wav" : "mp3";
+
+    // Primary: Gemini 2.5 Flash for continuous full-coverage speech-to-text with timestamps
+    try {
+      const geminiPrompt = `You are an expert bilingual speech-to-text transcriber and subtitle generator. Transcribe the entire attached audio recording from 00:00 to the end in ${langCode === "bn" ? "Bangla / Bengali (বাংলা)" : "English"}.
+CRITICAL INSTRUCTIONS:
+1. Transcribe EVERY spoken phrase, sentence, and dialogue across the entire duration without omitting anything.
+2. Segment the transcription into natural, synchronized subtitle cues (around 2 to 6 seconds per cue).
+3. Return ONLY a valid JSON array of cue objects with:
+   - "id": string (e.g. "cue-1", "cue-2")
+   - "start": float (start time in seconds, e.g. 0.0)
+   - "end": float (end time in seconds, e.g. 3.5)
+   - "text": string (the exact transcribed speech)
+Example format:
+[
+  {"id": "cue-1", "start": 0.0, "end": 3.5, "text": "প্রথম বাক্য..."},
+  {"id": "cue-2", "start": 3.8, "end": 7.2, "text": "পরবর্তী বাক্য..."}
+]
+Output ONLY the raw JSON array. Do NOT wrap in markdown fences or include explanations.`;
+
+      const geminiRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey.trim()}`,
+          "HTTP-Referer": siteConfig.url,
+          "X-OpenRouter-Title": siteConfig.name,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_DEFAULT_TEXT_MODEL,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: geminiPrompt,
+                },
+                {
+                  type: "input_audio",
+                  input_audio: {
+                    data: base64Audio,
+                    format: audioFormat,
+                  },
+                },
+              ],
+            },
+          ],
+          temperature: 0.1,
+        }),
+      });
+
+      if (geminiRes.ok) {
+        const geminiData = await geminiRes.json();
+        const content = geminiData.choices?.[0]?.message?.content || "";
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const parsedCues = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(parsedCues) && parsedCues.length > 0) {
+            return NextResponse.json({ cues: parsedCues });
+          }
+        }
+      }
+    } catch (geminiErr) {
+      console.warn("Gemini transcription fallback to Whisper:", geminiErr);
+    }
+
+    // Fallback: Whisper Large v3 with prompt and verbose_json
     const openRouterFormData = new FormData();
-    openRouterFormData.append("file", file, "audio.mp3");
+    const audioBlob = new Blob([arrayBuffer], { type: "audio/mp3" });
+    openRouterFormData.append("file", audioBlob, "audio.mp3");
     openRouterFormData.append("model", OPENROUTER_DEFAULT_WHISPER_MODEL);
     openRouterFormData.append("language", langCode);
     openRouterFormData.append("response_format", "verbose_json");
+    openRouterFormData.append(
+      "prompt",
+      langCode === "bn"
+        ? "বাংলা অডিও কথোপকথন ও সাবটাইটেল। শুরু থেকে শেষ পর্যন্ত সম্পূর্ণ বক্তব্য নির্ভুলভাবে ট্রান্সক্রাইব করুন।"
+        : "Accurate, continuous English speech-to-text with timestamps across the entire audio.",
+    );
+    openRouterFormData.append("temperature", "0.0");
 
     const openRouterRes = await fetch(
       "https://openrouter.ai/api/v1/audio/transcriptions",
