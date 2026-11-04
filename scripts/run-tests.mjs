@@ -141,6 +141,10 @@ import {
   parseVtt,
   mapWhisperResponseToCues,
 } from "../src/features/audio-to-transcript/utils/subtitle-formats.ts";
+import {
+  smartChunkWordsToCues,
+  filterWhisperHallucinations,
+} from "../src/features/audio-to-transcript/utils/word-aligner.ts";
 
 console.log("🚀 Running OmniTools Unit Tests...\n");
 
@@ -1065,6 +1069,37 @@ test("mapWhisperResponseToCues maps verbose segments and falls back to sentences
   assert.equal(fallbackCues.length, 2);
   assert.equal(fallbackCues[0].text, "প্রথম বাক্য।");
   assert.equal(fallbackCues[1].text, "দ্বিতীয় বাক্য!");
+});
+
+test("filterWhisperHallucinations strips noise tokens and loops", () => {
+  const words = [
+    { word: "[Music]", start: 0, end: 1 },
+    { word: "Hello", start: 1.1, end: 1.5 },
+    { word: "Thank you", start: 2.0, end: 2.5 },
+    { word: "Thank you", start: 2.6, end: 3.0 },
+    { word: "Thank you", start: 3.1, end: 3.5 },
+    { word: "Thank you", start: 3.6, end: 4.0 },
+  ];
+  const cleaned = filterWhisperHallucinations(words);
+  assert.equal(cleaned.some((w) => w.word === "[Music]"), false);
+  assert.equal(cleaned.filter((w) => w.word === "Thank you").length <= 2, true);
+});
+
+test("smartChunkWordsToCues splits on punctuation, pause gaps and preserves word timings", () => {
+  const words = [
+    { word: "স্বাগতম", start: 0.2, end: 0.6 },
+    { word: "বন্ধুরা।", start: 0.7, end: 1.2 },
+    { word: "আজকের", start: 2.0, end: 2.5 },
+    { word: "টিউটোরিয়ালে", start: 2.6, end: 3.4 },
+  ];
+  const cues = smartChunkWordsToCues(words);
+  assert.equal(cues.length, 2);
+  assert.equal(cues[0].text, "স্বাগতম বন্ধুরা।");
+  assert.equal(cues[0].start, 0.2);
+  assert.equal(cues[0].words?.length, 2);
+  assert.equal(cues[1].text, "আজকের টিউটোরিয়ালে");
+  assert.equal(cues[1].start, 2.0);
+  assert.equal(cues[1].words?.length, 2);
 });
 
 console.log(`\n🎉 Results: ${passed}/${total} tests passed!\n`);

@@ -16,6 +16,7 @@ import {
   FileText,
   AlertCircle,
   Layers,
+  Key,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,7 @@ import { decodeAudioFromVideo } from "@/features/video-to-audio/utils/audio-extr
 import { encodeMp3FromChannels } from "@/features/video-to-audio/utils/mp3-encoder";
 import { SubtitleVideoPlayer } from "./SubtitleVideoPlayer";
 import { TranscriptEditor } from "./TranscriptEditor";
+import { getOpenRouterApiKey, saveOpenRouterApiKey } from "@/lib/openrouter";
 import { cn } from "@/lib/utils";
 
 const LANGUAGES: Array<{ id: TranscriptLanguage; label: string; group: string }> = [
@@ -119,6 +121,25 @@ export function AudioToTranscript() {
   // Export State
   const [selectedExportFormat, setSelectedExportFormat] = useState<ExportFormat>("srt");
   const [hasCopied, setHasCopied] = useState<boolean>(false);
+
+  // User OpenRouter API Key state
+  const [apiKeyInput, setApiKeyInput] = useState<string>("");
+  const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
+  const [isKeySaved, setIsKeySaved] = useState<boolean>(false);
+
+  useEffect(() => {
+    const existing = getOpenRouterApiKey();
+    if (existing) {
+      setApiKeyInput(existing);
+      setIsKeySaved(true);
+    }
+  }, []);
+
+  const handleSaveApiKey = () => {
+    saveOpenRouterApiKey(apiKeyInput);
+    setIsKeySaved(Boolean(apiKeyInput.trim()));
+    setShowApiKeyInput(false);
+  };
 
   // References
   const mediaFileInputRef = useRef<HTMLInputElement>(null);
@@ -270,49 +291,65 @@ export function AudioToTranscript() {
     setError(null);
 
     try {
-      let audioPayload: File | Blob = fileToTranscribe;
+      const isVideoFile =
+        media.isVideo ||
+        fileToTranscribe.type.startsWith("video/") ||
+        /\.(mp4|mov|webm|mkv|avi)$/i.test(fileToTranscribe.name);
 
-      setProgress({
-        status: "transcribing",
-        message: "Extracting audio track...",
-      });
+      let audioPayload: Blob = fileToTranscribe;
 
-      // Decode audio in browser to high-clarity 128kbps mono MP3
-      // Guarantees small payload (<1.5MB for 2-3 min) & continuous recording from 00:00 to end
-      try {
-        const audioBuffer = await decodeAudioFromVideo(fileToTranscribe);
-        const numChannels = Math.min(2, audioBuffer.numberOfChannels) as 1 | 2;
-        const channelsData: Float32Array[] = [];
-        for (let c = 0; c < numChannels; c++) {
-          channelsData.push(audioBuffer.getChannelData(c));
-        }
-        audioPayload = await encodeMp3FromChannels(channelsData, {
-          sampleRate: audioBuffer.sampleRate,
-          channels: numChannels,
-          bitrate: 128,
+      if (isVideoFile) {
+        setProgress({
+          status: "transcribing",
+          message: "Extracting audio track from video...",
         });
-      } catch (decodeErr) {
-        console.warn("Direct decoding fallback, using original file", decodeErr);
+
+        // Decode audio in browser to high-clarity 128kbps mono MP3
+        // Guarantees small payload (<1.5MB for 2-3 min) & continuous recording from 00:00 to end
+        try {
+          const audioBuffer = await decodeAudioFromVideo(fileToTranscribe);
+          const numChannels = Math.min(2, audioBuffer.numberOfChannels) as 1 | 2;
+          const channelsData: Float32Array[] = [];
+          for (let c = 0; c < numChannels; c++) {
+            channelsData.push(audioBuffer.getChannelData(c));
+          }
+          audioPayload = await encodeMp3FromChannels(channelsData, {
+            sampleRate: audioBuffer.sampleRate,
+            channels: numChannels,
+            bitrate: 128,
+          });
+        } catch (decodeErr) {
+          console.warn("Direct decoding fallback, using original file", decodeErr);
+          if (fileToTranscribe.size > 20 * 1024 * 1024) {
+            throw new Error(
+              "Video file is too large to upload directly without browser compression (>20MB). Please use an MP3 or WAV audio file for fast processing.",
+            );
+          }
+        }
+      } else {
+        // Pristine audio file (MP3, WAV, M4A, OGG): use original file directly to preserve 100% speech fidelity!
+        audioPayload = fileToTranscribe;
       }
 
       setProgress({
         status: "transcribing",
-        message: `Transcribing entire recording (${selectedLanguage.startsWith("bn") ? "বাংলা" : "English"})...`,
+        message: `Transcribing audio (${selectedLanguage.startsWith("bn") ? "বাংলা" : "English"}) with word timestamps...`,
       });
 
-      const resultCues = await transcribeWithOpenRouter(
+      const response = await transcribeWithOpenRouter(
         audioPayload,
         selectedLanguage,
       );
 
-      if (resultCues.length > 0) {
-        setCues(resultCues);
+      if (response.cues && response.cues.length > 0) {
+        setCues(response.cues);
+        const wordCount = response.words?.length || 0;
         setProgress({
           status: "complete",
-          message: `Transcription complete (${resultCues.length} segments).`,
+          message: `Transcription complete (${response.cues.length} subtitle cues${wordCount > 0 ? `, ${wordCount} words synchronized` : ""}).`,
         });
       } else {
-        setError("Transcription returned empty results.");
+        setError("Transcription returned empty results. Please check your audio clarity or API key.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "OpenRouter transcription failed.";
@@ -481,6 +518,16 @@ export function AudioToTranscript() {
               <Sparkles className="size-4 mr-1.5 text-primary" />
               Try Bangla Sample Cues
             </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+              className="font-medium text-xs sm:text-sm"
+            >
+              <Key className="size-4 mr-1.5 text-primary" />
+              {isKeySaved ? "API Key Configured" : "API Key Settings"}
+            </Button>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
@@ -618,6 +665,20 @@ export function AudioToTranscript() {
                 )}
 
                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                  className={cn(
+                    "text-xs h-8 px-2",
+                    isKeySaved && "text-primary border-primary/30",
+                  )}
+                  title="OpenRouter API Key Settings"
+                >
+                  <Key className="size-3.5 mr-1 text-primary" />
+                  Key
+                </Button>
+
+                <Button
                   size="sm"
                   onClick={handleRunOpenRouter}
                   disabled={isAiTranscribing || isListening}
@@ -629,6 +690,46 @@ export function AudioToTranscript() {
               </div>
             </div>
           </Card>
+
+          {/* API Key Configuration Panel */}
+          {showApiKeyInput && (
+            <Card className="p-3.5 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5 animate-fade-in text-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Key className="size-4 text-primary" />
+                  <span className="font-semibold text-foreground">OpenRouter API Key</span>
+                  {isKeySaved && (
+                    <Badge variant="secondary" className="text-[10px] bg-primary/20 text-primary border-none">
+                      Saved in Browser
+                    </Badge>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowApiKeyInput(false)}
+                  className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  Close
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Optional: Enter your OpenRouter API Key (<code className="font-mono">sk-or-v1-...</code>) to use your personal credits for Whisper transcription and subtitle polishing.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="password"
+                  placeholder="sk-or-v1-..."
+                  value={apiKeyInput}
+                  onChange={(e) => setApiKeyInput(e.target.value)}
+                  className="h-8 text-xs font-mono"
+                />
+                <Button size="sm" onClick={handleSaveApiKey} className="h-8 px-3 text-xs font-bold shrink-0">
+                  Save Key
+                </Button>
+              </div>
+            </Card>
+          )}
 
           {/* Feedback & Status Alert */}
           {error && (

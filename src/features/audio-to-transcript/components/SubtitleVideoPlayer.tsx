@@ -134,7 +134,31 @@ export function SubtitleVideoPlayer({
                 fontSizeClass,
               )}
             >
-              {activeCue.text}
+              {activeCue.words && activeCue.words.length > 0 ? (
+                <span>
+                  {activeCue.words.map((w, wIdx) => {
+                    const isWordActive = currentTime >= w.start && currentTime <= w.end;
+                    const hasPassed = currentTime > w.end;
+                    return (
+                      <span
+                        key={wIdx}
+                        className={cn(
+                          "transition-colors duration-100",
+                          isWordActive
+                            ? "text-primary font-bold drop-shadow-sm scale-105 inline-block mx-0.5"
+                            : hasPassed
+                              ? "text-white"
+                              : "text-zinc-300",
+                        )}
+                      >
+                        {w.word}{" "}
+                      </span>
+                    );
+                  })}
+                </span>
+              ) : (
+                activeCue.text
+              )}
             </div>
           </div>
         )}
